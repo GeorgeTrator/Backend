@@ -160,6 +160,550 @@ Esta consulta deve utilizar as tabelas item_pedido_venda e produto, contando qua
     </p>
 </div>
 
+<h2>Dump para criar banco de dados </h2>
+<p>
+    -- Esquema
+
+CREATE TABLE categoria (
+	id_categoria INT AUTO_INCREMENT PRIMARY KEY,
+	nome_categoria VARCHAR(100) NOT NULL, 
+	descricao TEXT
+) ENGINE=InnoDB;
+CREATE TABLE fornecedor (
+	id_fornecedor INT AUTO_INCREMENT PRIMARY KEY,
+	nome_fornecedor VARCHAR(150) NOT NULL, 
+	cnpj VARCHAR(20) UNIQUE NOT NULL,
+	telefone VARCHAR(20), 
+	email VARCHAR(100),
+	endereco TEXT
+) ENGINE=InnoDB;
+CREATE TABLE cliente (
+	id_cliente INT AUTO_INCREMENT PRIMARY KEY, 
+	nome_cliente VARCHAR(150) NOT NULL, 
+	cpf_cnpj VARCHAR(20) UNIQUE NOT NULL,
+	telefone VARCHAR(20),
+	mail VARCHAR(100),
+	endereco TEXT
+) ENGINE=InnoDB;
+CREATE TABLE usuario (
+	id_usuario INT AUTO_INCREMENT PRIMARY KEY, 
+	login VARCHAR(50) UNIQUE NOT NULL,
+	senha_hash VARCHAR(255) NOT NULL, 
+	nome_completo VARCHAR(100) NOT NULL, 
+	ativo BOOLEAN DEFAULT TRUE
+) ENGINE=InnoDB;
+CREATE TABLE deposito (
+	id_deposito INT AUTO_INCREMENT PRIMARY KEY, 
+	nome_deposito VARCHAR(100) NOT NULL, 
+	localizacao VARCHAR(200)
+) ENGINE=InnoDB;
+CREATE TABLE produto (
+	id_produto INT AUTO_INCREMENT PRIMARY KEY, 
+	codigo_produto VARCHAR(50) UNIQUE NOT NULL, 
+	nome_produto VARCHAR(150) NOT NULL, 
+	descricao TEXT,
+	preco_custo DECIMAL(10,2) CHECK (preco_custo >= 0), 
+	preco_venda DECIMAL(10,2) CHECK (preco_venda >= 0), 
+	estoque_minimo INTEGER DEFAULT 0 CHECK (estoque_minimo >= 0),
+	estoque_atual INTEGER DEFAULT 0, 
+	id_categoria INTEGER REFERENCES categoria(id_categoria), 
+	id_fornecedor INTEGER REFERENCES fornecedor(id_fornecedor)
+) ENGINE=InnoDB;
+CREATE TABLE estoque_deposito (
+	id_estoque INT AUTO_INCREMENT PRIMARY KEY,
+	id_produto INTEGER NOT NULL REFERENCES produto(id_produto), 
+	id_deposito INTEGER NOT NULL REFERENCES deposito(id_deposito), 
+	quantidade INTEGER NOT NULL DEFAULT 0 CHECK (quantidade >= 0), 
+	UNIQUE(id_produto, id_deposito)
+) ENGINE=InnoDB;
+CREATE TABLE ordem_compra (
+	id_ordem_compra INT AUTO_INCREMENT PRIMARY KEY,
+	id_fornecedor INTEGER NOT NULL REFERENCES fornecedor(id_fornecedor), 
+	data_emissao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	data_previsao DATE,
+	status VARCHAR(20) CHECK (status IN ('PENDENTE', 'RECEBIDO', 'CANCELADO')) DEFAULT 'PENDENTE',
+	valor_total DECIMAL(12,2) DEFAULT 0
+) ENGINE=InnoDB;
+CREATE TABLE item_ordem_compra (
+	id_item_compra INT AUTO_INCREMENT PRIMARY KEY,
+	id_ordem_compra INTEGER NOT NULL REFERENCES ordem_compra(id_ordem_compra) ON DELETE CASCADE,
+	id_produto INTEGER NOT NULL REFERENCES produto(id_produto), 
+	quantidade INTEGER NOT NULL CHECK (quantidade > 0), 
+	valor_unitario DECIMAL(10,2) NOT NULL CHECK (valor_unitario >= 0),
+	subtotal DECIMAL(12,2) GENERATED ALWAYS AS (quantidade * valor_unitario) STORED
+) ENGINE=InnoDB;
+CREATE TABLE pedido_venda (
+	id_pedido_venda INT AUTO_INCREMENT PRIMARY KEY,
+	id_cliente INTEGER NOT NULL REFERENCES cliente(id_cliente), 
+	id_usuario INTEGER NOT NULL REFERENCES usuario(id_usuario), 
+	data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	status VARCHAR(20) CHECK (status IN ('ABERTO', 'CONFIRMADO', 'FATURADO', 'CANCELADO')) DEFAULT 'ABERTO',
+	valor_total DECIMAL(12,2) DEFAULT 0
+) ENGINE=InnoDB;
+CREATE TABLE item_pedido_venda (
+	id_item_venda INT AUTO_INCREMENT PRIMARY KEY,
+	id_pedido_venda INTEGER NOT NULL REFERENCES pedido_venda(id_pedido_venda) ON DELETE CASCADE,
+	id_produto INTEGER NOT NULL REFERENCES produto(id_produto), 
+	quantidade INTEGER NOT NULL CHECK (quantidade > 0), 
+	valor_unitario DECIMAL(10,2) NOT NULL CHECK (valor_unitario >= 0),
+	subtotal DECIMAL(12,2) GENERATED ALWAYS AS (quantidade * valor_unitario) STORED
+) ENGINE=InnoDB;
+CREATE TABLE movimentacao (
+	id_movimentacao INT AUTO_INCREMENT PRIMARY KEY,
+	data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+	tipo_movimentacao VARCHAR(20) CHECK (tipo_movimentacao IN ('ENTRADA', 'SAIDA', 'TRANSFERENCIA', 'RESERVA', 'BAIXA_RESERVA')),
+	quantidade INTEGER NOT NULL CHECK (quantidade > 0), 
+	id_produto INTEGER NOT NULL REFERENCES produto(id_produto), 
+	id_deposito_origem INTEGER REFERENCES deposito(id_deposito), 
+	id_deposito_destino INTEGER REFERENCES deposito(id_deposito), 
+	id_usuario INTEGER NOT NULL REFERENCES usuario(id_usuario), 
+	observacao TEXT,
+	-- Restrições de integridade para tipos de movimentação
+	CONSTRAINT check_origem_destino CHECK (
+		(tipo_movimentacao = 'ENTRADA' AND id_deposito_origem IS NULL AND id_deposito_destino IS NOT NULL) OR
+		(tipo_movimentacao = 'SAIDA' AND id_deposito_origem IS NOT NULL AND id_deposito_destino IS NULL) OR
+		(tipo_movimentacao = 'TRANSFERENCIA' AND id_deposito_origem IS NOT NULL AND id_deposito_destino IS NOT NULL) OR
+		(tipo_movimentacao IN ('RESERVA', 'BAIXA_RESERVA') AND id_deposito_origem IS NOT NULL)
+	)
+) ENGINE=InnoDB;
+--Dados
+START TRANSACTION;
+-- =============================================================
+-- 1. CATEGORIAS (10 registros)
+-- =============================================================
+INSERT INTO categoria (nome_categoria, descricao) VALUES
+  ('Eletrônicos',      'Smartphones, tablets e gadgets em geral'),
+  ('Informática',      'Computadores, periféricos e acessórios'),
+  ('Papelaria',        'Materiais de escritório e papelaria'),
+  ('Ferramentas',      'Ferramentas manuais e elétricas'),
+  ('Limpeza',          'Produtos de limpeza e higiene'),
+  ('Alimentos',        'Produtos alimentícios não perecíveis'),
+  ('Vestuário',        'Roupas e acessórios de moda'),
+  ('Móveis',           'Móveis residenciais e corporativos'),
+  ('Eletrodomésticos', 'Linha branca e eletrodomésticos portáteis'),
+  ('Segurança',        'Equipamentos de segurança e proteção');
+
+-- =============================================================
+-- 2. FORNECEDORES (15 registros)
+-- =============================================================
+INSERT INTO fornecedor (nome_fornecedor, cnpj, telefone, email, endereco) VALUES
+  ('TechSupply Ltda',         '11.222.333/0001-01', '(11) 91234-0001', 'contato@techsupply.com.br',    'Av. Paulista, 1000, São Paulo/SP'),
+  ('InfoDistrib S.A.',        '22.333.444/0001-02', '(21) 91234-0002', 'vendas@infodistrib.com.br',     'Rua das Laranjeiras, 50, Rio de Janeiro/RJ'),
+  ('PapelariaMax ME',         '33.444.555/0001-03', '(31) 91234-0003', 'compras@papelariamax.com.br',   'Av. Afonso Pena, 200, Belo Horizonte/MG'),
+  ('FerraCentro Eireli',      '44.555.666/0001-04', '(41) 91234-0004', 'atend@ferracentro.com.br',      'Rua XV de Novembro, 300, Curitiba/PR'),
+  ('LimpPro Distribuidora',   '55.666.777/0001-05', '(51) 91234-0005', 'limpro@limpro.com.br',          'Av. Ipiranga, 400, Porto Alegre/RS'),
+  ('AlimBrasil S.A.',         '66.777.888/0001-06', '(62) 91234-0006', 'contato@alimbrasil.com.br',     'Rua 44, 500, Goiânia/GO'),
+  ('ModaFácil Ltda',          '77.888.999/0001-07', '(85) 91234-0007', 'vendas@modafacil.com.br',       'Av. Beira Mar, 600, Fortaleza/CE'),
+  ('MovelMais ME',            '88.999.000/0001-08', '(71) 91234-0008', 'movelmais@movelmais.com.br',    'Rua Chile, 700, Salvador/BA'),
+  ('Eletro Total Eireli',     '99.000.111/0001-09', '(92) 91234-0009', 'eletrototal@eletro.com.br',     'Av. Eduardo Ribeiro, 800, Manaus/AM'),
+  ('SecurTech Ltda',          '10.111.222/0001-10', '(81) 91234-0010', 'securtech@securtech.com.br',    'Av. Conde da Boa Vista, 900, Recife/PE'),
+  ('GlobalParts S.A.',        '11.222.444/0001-11', '(11) 91234-0011', 'gp@globalparts.com.br',         'Av. Rebouças, 1100, São Paulo/SP'),
+  ('Brasil Atacado ME',       '22.333.555/0001-12', '(21) 91234-0012', 'ba@brasilatacado.com.br',       'Rua Primeiro de Março, 1200, Rio de Janeiro/RJ'),
+  ('NorteDistrib Eireli',     '33.444.666/0001-13', '(91) 91234-0013', 'nd@nortedistrib.com.br',        'Av. Nazaré, 1300, Belém/PA'),
+  ('CentroWest Distribuid.',  '44.555.777/0001-14', '(67) 91234-0014', 'cw@centrowest.com.br',          'Av. Afonso Pena, 1400, Campo Grande/MS'),
+  ('SulComercial Ltda',       '55.666.888/0001-15', '(48) 91234-0015', 'sc@sulcomercial.com.br',        'Rua Hercílio Luz, 1500, Florianópolis/SC');
+
+-- =============================================================
+-- 3. CLIENTES (20 registros — 15 pessoas físicas + 5 empresas)
+-- =============================================================
+INSERT INTO cliente (nome_cliente, cpf_cnpj, telefone, mail, endereco) VALUES
+  ('Ana Paula Ferreira',     '111.222.333-01',     '(11) 99001-0001', 'ana.ferreira@email.com',       'Rua das Flores, 10, São Paulo/SP'),
+  ('Bruno Costa',            '222.333.444-02',     '(21) 99001-0002', 'bruno.costa@email.com',        'Av. Atlântica, 20, Rio de Janeiro/RJ'),
+  ('Carla Menezes',          '333.444.555-03',     '(31) 99001-0003', 'carla.menezes@email.com',      'Rua da Bahia, 30, Belo Horizonte/MG'),
+  ('Daniel Rocha',           '444.555.666-04',     '(41) 99001-0004', 'daniel.rocha@email.com',       'Av. Cândido de Abreu, 40, Curitiba/PR'),
+  ('Eduarda Lima',           '555.666.777-05',     '(51) 99001-0005', 'eduarda.lima@email.com',       'Av. Assis Brasil, 50, Porto Alegre/RS'),
+  ('Fábio Nascimento',       '666.777.888-06',     '(62) 99001-0006', 'fabio.nasc@email.com',         'Rua 68, 60, Goiânia/GO'),
+  ('Gabriela Torres',        '777.888.999-07',     '(85) 99001-0007', 'gabi.torres@email.com',        'Rua Major Facundo, 70, Fortaleza/CE'),
+  ('Henrique Alves',         '888.999.000-08',     '(71) 99001-0008', 'henrique.alves@email.com',     'Av. Tancredo Neves, 80, Salvador/BA'),
+  ('Isabela Martins',        '999.000.111-09',     '(92) 99001-0009', 'isabela.m@email.com',          'Rua Marcílio Dias, 90, Manaus/AM'),
+  ('João Vitor Pires',       '000.111.222-10',     '(81) 99001-0010', 'joaovitor.p@email.com',        'Av. Dantas Barreto, 100, Recife/PE'),
+  ('Larissa Cunha',          '111.333.555-11',     '(11) 99001-0011', 'larissa.cunha@email.com',      'Rua Augusta, 110, São Paulo/SP'),
+  ('Marcos Oliveira',        '222.444.666-12',     '(21) 99001-0012', 'marcos.oliv@email.com',        'Rua Santa Clara, 120, Rio de Janeiro/RJ'),
+  ('Natália Sousa',          '333.555.777-13',     '(31) 99001-0013', 'natalia.sousa@email.com',      'Av. Nossa Senhora do Carmo, 130, Belo Horizonte/MG'),
+  ('Otávio Gomes',           '444.666.888-14',     '(41) 99001-0014', 'otavio.gomes@email.com',       'Rua Comendador Araújo, 140, Curitiba/PR'),
+  ('Patrícia Duarte',        '555.777.999-15',     '(51) 99001-0015', 'patricia.d@email.com',         'Av. Carlos Gomes, 150, Porto Alegre/RS'),
+  ('Empresa ABC Ltda',       '10.203.040/0001-16', '(11) 99001-0016', 'compras@empresaabc.com.br',    'Av. Faria Lima, 1600, São Paulo/SP'),
+  ('Comercial XYZ Eireli',   '20.304.050/0001-17', '(21) 99001-0017', 'pedidos@comercialxyz.com.br',  'Rua do Ouvidor, 1700, Rio de Janeiro/RJ'),
+  ('Distribuidora Norte ME', '30.405.060/0001-18', '(91) 99001-0018', 'dnorte@dnorte.com.br',         'Av. Nazaré, 1800, Belém/PA'),
+  ('Mega Comércio S.A.',     '40.506.070/0001-19', '(62) 99001-0019', 'mega@megacomercio.com.br',     'Rua 4, 1900, Goiânia/GO'),
+  ('Loja Virtual Fast Ltda', '50.607.080/0001-20', '(11) 99001-0020', 'fast@lojafast.com.br',         'Rua Consolação, 2000, São Paulo/SP');
+
+-- =============================================================
+-- 4. USUÁRIOS (8 registros — 1 inativo para testar gatilho)
+-- =============================================================
+INSERT INTO usuario (login, senha_hash, nome_completo, ativo) VALUES
+  ('admin',      '$2b$10$hash_admin_001', 'Administrador do Sistema', TRUE),
+  ('jsilva',     '$2b$10$hash_jsilv_002', 'José Silva',               TRUE),
+  ('mfernandes', '$2b$10$hash_mfern_003', 'Maria Fernandes',          TRUE),
+  ('psantos',    '$2b$10$hash_psant_004', 'Pedro Santos',             TRUE),
+  ('lrocha',     '$2b$10$hash_lroch_005', 'Lucas Rocha',              TRUE),
+  ('caraujo',    '$2b$10$hash_carau_006', 'Carla Araújo',             TRUE),
+  ('fmelo',      '$2b$10$hash_fmelo_007', 'Felipe Melo',              FALSE), -- inativo: bloqueado pelo gatilho tg_verifica_usuario_mov
+  ('rsouza',     '$2b$10$hash_rsouza_08', 'Roberta Souza',            TRUE);
+
+-- =============================================================
+-- 5. DEPÓSITOS (8 registros)
+-- =============================================================
+INSERT INTO deposito (nome_deposito, localizacao) VALUES
+  ('Depósito Central',      'Galpão A — Setor Logístico Norte, São Paulo/SP'),
+  ('Depósito Sul',          'Galpão B — Distrito Industrial, Curitiba/PR'),
+  ('Depósito Nordeste',     'Galpão C — Zona Industrial, Recife/PE'),
+  ('Depósito Norte',        'Galpão D — Polo Industrial, Manaus/AM'),
+  ('Depósito Centro-Oeste', 'Galpão E — Setor de Indústrias, Goiânia/GO'),
+  ('Filial São Paulo',      'Loja/Depósito — Av. Paulista, 500, São Paulo/SP'),
+  ('Filial Rio de Janeiro', 'Loja/Depósito — Av. Rio Branco, 200, Rio de Janeiro/RJ'),
+  ('Depósito Terceirizado', 'Operador Logístico — BR-116, Km 25, Guarulhos/SP');
+
+-- =============================================================
+-- 6. PRODUTOS (30 registros)
+-- estoque_atual pré-calculado com base nas movimentações da
+-- seção 11: SUM(ENTRADA) - SUM(SAIDA) ± SUM(TRANSFERENCIA).
+-- RESERVA e BAIXA_RESERVA não alteram quantidade em estoque.
+-- Nota: com gatilhos ativos o campo será recalculado após o
+-- INSERT em movimentacao; o resultado final é idêntico.
+-- Referências: id_categoria (1-10) e id_fornecedor (1-15)
+-- =============================================================
+INSERT INTO produto (codigo_produto, nome_produto, descricao,
+                     preco_custo, preco_venda, estoque_minimo, estoque_atual,
+                     id_categoria, id_fornecedor) VALUES
+  ('ELET-001', 'Smartphone Samsung Galaxy A54',   'Smartphone Android 6.4", 128 GB',          850.00,  1299.90,  5,  8,  1,  1),  -- +10 entrada, -5 transf., -1 saída(SP), -1 saída(Central) = 8
+  ('ELET-002', 'Tablet Apple iPad 10ª Geração',   'iPad 10.9", Wi-Fi, 64 GB',               1800.00,  2799.90,  3,  5,  1,  1),  -- +5 entrada = 5
+  ('INFO-001', 'Notebook Dell Inspiron 15',       'Notebook i5, 16 GB RAM, 512 GB SSD',     2200.00,  3499.00,  3,  8,  2,  2),  -- +8 entrada, -3 transf. = 5 (Central) + 3 (Filial RJ) = 8
+  ('INFO-002', 'Mouse Sem Fio Logitech MX3',      'Mouse ergonômico sem fio',                  95.00,   189.90, 10, 28,  2,  2),  -- +30 entrada, -2 saída = 28
+  ('INFO-003', 'Teclado Mecânico HyperX Alloy',   'Teclado mecânico gamer, switch red',       180.00,   349.90,  5,  0,  2, 11),  -- sem movimentações = 0
+  ('INFO-004', 'Monitor LG 27" Full HD',          'Monitor IPS 27", 75 Hz',                  680.00,  1099.00,  3, 10,  2,  2),  -- +10 entrada = 10
+  ('PAP-001',  'Resma de Papel A4 500 fls',       'Papel sulfite 75 g/m², 500 folhas',         12.50,    24.90, 20, 95,  3,  3),  -- +100 entrada, -5 saída = 95
+  ('PAP-002',  'Caneta Esferográfica Azul cx/50', 'Caixa com 50 canetas BIC azul',             18.00,    35.90, 15, 50,  3,  3),  -- +50 entrada = 50
+  ('PAP-003',  'Grampeador de Mesa Tilibra',      'Grampeador até 25 folhas',                  22.00,    42.90,  8,  0,  3,  3),  -- sem movimentações = 0
+  ('FERR-001', 'Furadeira de Impacto Bosch 650W', 'Furadeira 650 W com maleta',               170.00,   299.90,  5, 15,  4,  4),  -- +15 entrada, -5 transf. = 10 (Central) + 5 (Filial RJ) = 15
+  ('FERR-002', 'Chave de Fenda Estrela 6 mm',     'Chave de fenda aço cromo-vanádio',           4.50,    12.90, 20, 50,  4,  4),  -- +50 entrada = 50
+  ('FERR-003', 'Alicate Universal 8" Tramontina', 'Alicate aço carbono c/ cabo isolado',       16.00,    32.90, 10,  0,  4,  4),  -- sem movimentações = 0
+  ('LIMP-001', 'Detergente Líquido 500 ml',       'Detergente neutro para louças',               2.80,     5.90, 50, 80,  5,  5),  -- +100 entrada, -10 transf., -20 saída = 70 (Central) + 10 (SP) = 80
+  ('LIMP-002', 'Desinfetante Pinho Sol 2 L',      'Desinfetante pinho 2 litros',                 8.50,    16.90, 30, 48,  5,  5),  -- +60 entrada, -12 saída = 48
+  ('LIMP-003', 'Álcool 70% Gel 500 g',            'Álcool em gel antisséptico',                  7.00,    14.90, 40, 80,  5,  5),  -- +80 entrada = 80
+  ('ALIM-001', 'Café Torrado e Moído 500 g',      'Café extra forte 500 g',                      9.00,    18.90, 30,  0,  6,  6),  -- sem movimentações = 0
+  ('ALIM-002', 'Açúcar Cristal 5 kg',             'Açúcar cristal pacote 5 kg',                 14.00,    27.90, 20,  0,  6,  6),  -- sem movimentações = 0
+  ('ALIM-003', 'Óleo de Soja 900 ml',             'Óleo de soja refinado 900 ml',                6.50,    12.90, 25,  0,  6,  6),  -- sem movimentações = 0
+  ('VEST-001', 'Camiseta Polo Masculina P',       'Camiseta polo algodão, tamanho P',           28.00,    59.90, 10, 30,  7,  7),  -- +30 entrada, -10 transf. = 20 (Sul) + 10 (Central) = 30
+  ('VEST-002', 'Camiseta Polo Masculina M',       'Camiseta polo algodão, tamanho M',           28.00,    59.90, 10, 40,  7,  7),  -- +40 entrada = 40
+  ('VEST-003', 'Camiseta Polo Masculina G',       'Camiseta polo algodão, tamanho G',           28.00,    59.90, 10, 25,  7,  7),  -- +25 entrada = 25
+  ('MOV-001',  'Cadeira de Escritório Giratória', 'Cadeira ergonômica regulável',              250.00,   499.90,  3,  0,  8,  8),  -- apenas RESERVA (sem alteração de saldo) = 0
+  ('MOV-002',  'Escrivaninha 120x60 MDF',         'Mesa de escritório MDF 120 x 60 cm',        180.00,   349.90,  3,  0,  8,  8),  -- sem movimentações = 0
+  ('ELET-003', 'Ventilador de Mesa 40 cm',        'Ventilador 40 cm, 3 velocidades',            75.00,   149.90,  5,  0,  9,  9),  -- sem movimentações = 0
+  ('ELET-004', 'Ferro de Passar Philips Azur',    'Ferro a vapor 2400 W c/ soleplate',          90.00,   179.90,  5,  0,  9,  9),  -- sem movimentações = 0
+  ('SEG-001',  'Câmera IP Intelbras Full HD',     'Câmera de segurança 2 MP Wi-Fi',            180.00,   349.90,  3,  0, 10, 10),  -- sem movimentações = 0
+  ('SEG-002',  'Cadeado Aço 40 mm Master Lock',  'Cadeado de aço temperado resistente',        18.00,    39.90, 10,  0, 10, 10),  -- sem movimentações = 0
+  ('INFO-005', 'Pendrive 32 GB Kingston',         'Pendrive USB 3.0, 32 GB',                    15.00,    34.90, 15,  0,  2,  2),  -- sem movimentações = 0
+  ('LIMP-004', 'Esponja Scotch-Brite cx/10',      'Pacote com 10 esponjas multiuso',              5.00,    11.90, 30,  0,  5,  5),  -- sem movimentações = 0
+  ('PAP-004',  'Pasta Arquivo Suspensa c/50',     'Pasta arquivo suspensa cartolina c/ 50',     35.00,    68.90,  5,  0,  3,  3);  -- sem movimentações = 0
+
+-- =============================================================
+-- 7. ORDENS DE COMPRA (15 registros)
+-- valor_total pré-calculado: SUM(quantidade * valor_unitario)
+-- dos itens de cada OC (seção 8 abaixo).
+-- OC 10, 13 e 14 não possuem itens neste script → 0.00.
+-- Nota: o gatilho tg_valor_ordem_compra recalcula valor_total
+-- automaticamente ao inserir itens; os valores abaixo ficam
+-- corretos tanto com quanto sem gatilho ativo.
+-- Status: RECEBIDO (8), PENDENTE (5), CANCELADO (2)
+-- =============================================================
+INSERT INTO ordem_compra (id_fornecedor, data_emissao, data_previsao, status, valor_total) VALUES
+  ( 1, '2025-01-05 09:00:00', '2025-01-15', 'RECEBIDO',  17500.00),  -- OC 1:  (10×850)+(5×1800)
+  ( 2, '2025-01-08 10:00:00', '2025-01-20', 'RECEBIDO',  27250.00),  -- OC 2:  (8×2200)+(30×95)+(10×680)
+  ( 3, '2025-01-10 11:00:00', '2025-01-22', 'RECEBIDO',   2590.00),  -- OC 3:  (100×12.50)+(50×18)+(20×22)
+  ( 4, '2025-01-12 09:30:00', '2025-01-25', 'RECEBIDO',   3255.00),  -- OC 4:  (15×170)+(50×4.50)+(30×16)
+  ( 5, '2025-01-15 14:00:00', '2025-01-28', 'RECEBIDO',   1350.00),  -- OC 5:  (100×2.80)+(60×8.50)+(80×7)
+  ( 6, '2025-01-20 08:00:00', '2025-02-01', 'RECEBIDO',   1810.00),  -- OC 6:  (80×9)+(50×14)+(60×6.50)
+  ( 7, '2025-02-01 09:00:00', '2025-02-12', 'RECEBIDO',   2660.00),  -- OC 7:  (30×28)+(40×28)+(25×28)
+  ( 8, '2025-02-05 10:00:00', '2025-02-18', 'RECEBIDO',   3940.00),  -- OC 8:  (10×250)+(8×180)
+  ( 1, '2025-02-10 11:00:00', '2025-02-22', 'PENDENTE',   7800.00),  -- OC 9:  (5×870)+(5×690)
+  ( 2, '2025-02-15 09:00:00', '2025-03-01', 'PENDENTE',      0.00),  -- OC 10: sem itens neste script
+  ( 9, '2025-02-20 10:00:00', '2025-03-05', 'RECEBIDO',   2850.00),  -- OC 11: (20×75)+(15×90)
+  (10, '2025-03-01 09:00:00', '2025-03-15', 'RECEBIDO',   2700.00),  -- OC 12: (12×180)+(30×18)
+  ( 3, '2025-03-05 14:00:00', '2025-03-20', 'PENDENTE',      0.00),  -- OC 13: sem itens neste script
+  ( 5, '2025-03-08 10:00:00', '2025-03-22', 'CANCELADO',     0.00),  -- OC 14: cancelada, sem itens
+  (11, '2025-03-10 09:00:00', '2025-03-25', 'PENDENTE',   2550.00);  -- OC 15: (10×180)+(50×15)
+
+
+-- =============================================================
+-- 8. ITENS DE ORDEM DE COMPRA (30 registros)
+-- ATENÇÃO: subtotal é GENERATED ALWAYS AS (qtd * v_unit),
+-- não deve ser incluído no INSERT.
+-- O gatilho tg_valor_ordem_compra atualiza o valor_total da OC.
+-- =============================================================
+INSERT INTO item_ordem_compra (id_ordem_compra, id_produto, quantidade, valor_unitario) VALUES
+  -- OC 1 — TechSupply (Eletrônicos)
+  (1,  1,  10,  850.00),  -- Smartphone Samsung
+  (1,  2,   5, 1800.00),  -- Tablet iPad
+  -- OC 2 — InfoDistrib (Informática)
+  (2,  3,   8, 2200.00),  -- Notebook Dell
+  (2,  4,  30,   95.00),  -- Mouse Logitech
+  (2,  6,  10,  680.00),  -- Monitor LG
+  -- OC 3 — PapelariaMax
+  (3,  7, 100,   12.50),  -- Resma de Papel
+  (3,  8,  50,   18.00),  -- Caneta Esferográfica
+  (3,  9,  20,   22.00),  -- Grampeador
+  -- OC 4 — FerraCentro
+  (4, 10,  15,  170.00),  -- Furadeira Bosch
+  (4, 11,  50,    4.50),  -- Chave de Fenda
+  (4, 12,  30,   16.00),  -- Alicate Tramontina
+  -- OC 5 — LimpPro
+  (5, 13, 100,    2.80),  -- Detergente Líquido
+  (5, 14,  60,    8.50),  -- Desinfetante Pinho Sol
+  (5, 15,  80,    7.00),  -- Álcool 70% Gel
+  -- OC 6 — AlimBrasil
+  (6, 16,  80,    9.00),  -- Café Torrado
+  (6, 17,  50,   14.00),  -- Açúcar Cristal
+  (6, 18,  60,    6.50),  -- Óleo de Soja
+  -- OC 7 — ModaFácil (Vestuário)
+  (7, 19,  30,   28.00),  -- Camiseta Polo P
+  (7, 20,  40,   28.00),  -- Camiseta Polo M
+  (7, 21,  25,   28.00),  -- Camiseta Polo G
+  -- OC 8 — MovelMais
+  (8, 22,  10,  250.00),  -- Cadeira Giratória
+  (8, 23,   8,  180.00),  -- Escrivaninha MDF
+  -- OC 11 — Eletro Total
+  (11, 24,  20,   75.00), -- Ventilador de Mesa
+  (11, 25,  15,   90.00), -- Ferro de Passar
+  -- OC 12 — SecurTech
+  (12, 26,  12,  180.00), -- Câmera IP Intelbras
+  (12, 27,  30,   18.00), -- Cadeado Aço 40 mm
+  -- OC 9 — Pendente (TechSupply — reposição de eletrônicos)
+  (9,   1,   5,  870.00), -- Smartphone Samsung (preço renegociado)
+  (9,   6,   5,  690.00), -- Monitor LG
+  -- OC 15 — Pendente (GlobalParts — periféricos)
+  (15,  5,  10,  180.00), -- Teclado Mecânico HyperX
+  (15, 28,  50,   15.00); -- Pendrive 32 GB Kingston
+
+-- =============================================================
+-- 9. PEDIDOS DE VENDA (15 registros)
+-- valor_total pré-calculado: SUM(quantidade * valor_unitario)
+-- dos itens de cada PV (seção 10 abaixo).
+-- PV 9 (cancelado) e PV 15 não possuem itens neste script → 0.00.
+-- Nota: o gatilho tg_valor_pedido_venda recalcula valor_total
+-- automaticamente ao inserir itens; os valores abaixo ficam
+-- corretos tanto com quanto sem gatilho ativo.
+-- Status variados: FATURADO, CONFIRMADO, ABERTO, CANCELADO
+-- =============================================================
+INSERT INTO pedido_venda (id_cliente, id_usuario, data_pedido, status, valor_total) VALUES
+  ( 1, 2, '2025-01-20 10:00:00', 'FATURADO',   1679.70),  -- PV 1:  (1×1299.90)+(2×189.90)
+  ( 2, 3, '2025-01-22 11:00:00', 'FATURADO',   4598.00),  -- PV 2:  (1×3499.00)+(1×1099.00)
+  ( 3, 2, '2025-01-25 14:00:00', 'FATURADO',    318.00),  -- PV 3:  (5×24.90)+(3×35.90)+(2×42.90)
+  ( 4, 4, '2025-02-01 09:00:00', 'FATURADO',    664.30),  -- PV 4:  (2×299.90)+(5×12.90)
+  (16, 5, '2025-02-05 10:00:00', 'FATURADO',    544.30),  -- PV 5:  (20×5.90)+(12×16.90)+(15×14.90)
+  ( 5, 3, '2025-02-10 11:00:00', 'FATURADO',     65.70),  -- PV 6:  (2×18.90)+(1×27.90)
+  (17, 2, '2025-02-15 14:00:00', 'FATURADO',   1797.00),  -- PV 7:  (10×59.90)+(12×59.90)+(8×59.90)
+  ( 6, 4, '2025-02-18 09:00:00', 'FATURADO',   1999.70),  -- PV 8:  (1×1299.90)+(2×349.90)
+  ( 7, 5, '2025-02-20 10:00:00', 'CANCELADO',      0.00),  -- PV 9:  cancelado, sem itens
+  ( 8, 3, '2025-02-25 11:00:00', 'FATURADO',    419.70),  -- PV 10: (1×349.90)+(2×34.90)
+  ( 9, 2, '2025-03-01 09:00:00', 'FATURADO',    329.80),  -- PV 11: (1×149.90)+(1×179.90)
+  (10, 4, '2025-03-05 10:00:00', 'CONFIRMADO', 1349.70),  -- PV 12: (2×499.90)+(1×349.90)
+  (18, 5, '2025-03-08 11:00:00', 'CONFIRMADO', 1201.50),  -- PV 13: (20×24.90)+(10×35.90)+(5×68.90)
+  (11, 3, '2025-03-10 14:00:00', 'ABERTO',      269.70),  -- PV 14: (1×189.90)+(2×39.90)
+  (19, 2, '2025-03-12 09:00:00', 'ABERTO',        0.00);  -- PV 15: sem itens neste script
+  
+-- =============================================================
+-- 10. ITENS DE PEDIDO DE VENDA (30 registros)
+-- ATENÇÃO: subtotal é GENERATED ALWAYS AS (qtd * v_unit),
+-- não deve ser incluído no INSERT.
+-- =============================================================
+INSERT INTO item_pedido_venda (id_pedido_venda, id_produto, quantidade, valor_unitario) VALUES
+  -- PV 1 — Ana Paula (Eletrônicos)
+  (1,  1, 1, 1299.90),  -- Smartphone Samsung
+  (1,  4, 2,  189.90),  -- Mouse Logitech
+  -- PV 2 — Bruno Costa (Informática)
+  (2,  3, 1, 3499.00),  -- Notebook Dell
+  (2,  6, 1, 1099.00),  -- Monitor LG
+  -- PV 3 — Carla Menezes (Papelaria)
+  (3,  7, 5,   24.90),  -- Resma de Papel
+  (3,  8, 3,   35.90),  -- Caneta Esferográfica
+  (3,  9, 2,   42.90),  -- Grampeador
+  -- PV 4 — Daniel Rocha (Ferramentas)
+  (4, 10, 2,  299.90),  -- Furadeira Bosch
+  (4, 11, 5,   12.90),  -- Chave de Fenda
+  -- PV 5 — Empresa ABC (Limpeza — compra corporativa em volume)
+  (5, 13, 20,   5.90),  -- Detergente Líquido
+  (5, 14, 12,  16.90),  -- Desinfetante Pinho Sol
+  (5, 15, 15,  14.90),  -- Álcool 70% Gel
+  -- PV 6 — Eduarda Lima (Alimentos)
+  (6, 16,  2,  18.90),  -- Café Torrado
+  (6, 17,  1,  27.90),  -- Açúcar Cristal
+  -- PV 7 — Comercial XYZ (Vestuário — revenda)
+  (7, 19, 10,  59.90),  -- Camiseta Polo P
+  (7, 20, 12,  59.90),  -- Camiseta Polo M
+  (7, 21,  8,  59.90),  -- Camiseta Polo G
+  -- PV 8 — Fábio Nascimento (Eletrônicos + Segurança)
+  (8,  1,  1, 1299.90), -- Smartphone Samsung
+  (8, 26,  2,  349.90), -- Câmera IP Intelbras
+  -- PV 10 — Henrique Alves (Periféricos)
+  (10,  5, 1,  349.90), -- Teclado Mecânico HyperX
+  (10, 28, 2,   34.90), -- Pendrive 32 GB
+  -- PV 11 — Isabela Martins (Eletrodomésticos)
+  (11, 24, 1,  149.90), -- Ventilador de Mesa
+  (11, 25, 1,  179.90), -- Ferro de Passar
+  -- PV 12 — João Vitor (Móveis — confirmado)
+  (12, 22, 2,  499.90), -- Cadeira Giratória
+  (12, 23, 1,  349.90), -- Escrivaninha MDF
+  -- PV 13 — Distribuidora Norte (Papelaria — confirmado)
+  (13,  7, 20,  24.90), -- Resma de Papel
+  (13,  8, 10,  35.90), -- Caneta Esferográfica
+  (13, 30,  5,  68.90), -- Pasta Arquivo Suspensa
+  -- PV 14 — Larissa Cunha (em aberto)
+  (14,  4,  1, 189.90), -- Mouse Logitech
+  (14, 27,  2,  39.90); -- Cadeado Aço 40 mm
+
+-- =============================================================
+-- 11. MOVIMENTAÇÕES DE ESTOQUE (30 registros)
+-- =============================================================
+-- REGRA DE ORDENAÇÃO OBRIGATÓRIA dentro deste INSERT:
+--   1º ENTRADAs  → constroem o saldo inicial por depósito
+--   2º TRANSFERENCIAs → redistribuem saldo entre depósitos
+--   3º SAIDAs    → retiram mercadoria do depósito de origem
+--   4º RESERVAs  → marcam logisticamente o estoque comprometido
+--   5º BAIXA_RESERVAs → estornam reservas (cancelamento/ajuste)
+-- O gatilho tg_atualiza_saldo processa cada linha na ordem do
+-- VALUES, validando saldo antes de cada SAIDA e TRANSFERENCIA.
+-- NOTA: a tabela estoque_deposito é populada automaticamente
+-- pelo gatilho; não é necessário inserir registros nela
+-- manualmente.
+-- =============================================================
+INSERT INTO movimentacao (data_movimentacao, tipo_movimentacao, quantidade,
+                          id_produto, id_deposito_origem, id_deposito_destino,
+                          id_usuario, observacao) VALUES
+
+  -- -------------------------------------------------------
+  -- ENTRADAS (15) — recebimento das ordens de compra
+  -- Constraint: id_deposito_origem IS NULL
+  --             id_deposito_destino IS NOT NULL
+  -- -------------------------------------------------------
+  ('2025-01-16 09:00:00', 'ENTRADA',  10,  1, NULL, 1, 2, 'Recebimento OC #1 — Smartphone Samsung'),
+  ('2025-01-16 09:15:00', 'ENTRADA',   5,  2, NULL, 1, 2, 'Recebimento OC #1 — Tablet iPad'),
+  ('2025-01-21 10:00:00', 'ENTRADA',   8,  3, NULL, 1, 3, 'Recebimento OC #2 — Notebook Dell'),
+  ('2025-01-21 10:15:00', 'ENTRADA',  30,  4, NULL, 1, 3, 'Recebimento OC #2 — Mouse Logitech'),
+  ('2025-01-21 10:30:00', 'ENTRADA',  10,  6, NULL, 1, 3, 'Recebimento OC #2 — Monitor LG'),
+  ('2025-01-23 11:00:00', 'ENTRADA', 100,  7, NULL, 1, 4, 'Recebimento OC #3 — Resma de Papel'),
+  ('2025-01-23 11:20:00', 'ENTRADA',  50,  8, NULL, 1, 4, 'Recebimento OC #3 — Caneta Esferográfica'),
+  ('2025-01-26 09:00:00', 'ENTRADA',  15, 10, NULL, 1, 2, 'Recebimento OC #4 — Furadeira Bosch'),
+  ('2025-01-26 09:15:00', 'ENTRADA',  50, 11, NULL, 1, 2, 'Recebimento OC #4 — Chave de Fenda'),
+  ('2025-01-29 14:00:00', 'ENTRADA', 100, 13, NULL, 1, 5, 'Recebimento OC #5 — Detergente Líquido'),
+  ('2025-01-29 14:15:00', 'ENTRADA',  60, 14, NULL, 1, 5, 'Recebimento OC #5 — Desinfetante Pinho Sol'),
+  ('2025-01-29 14:30:00', 'ENTRADA',  80, 15, NULL, 1, 5, 'Recebimento OC #5 — Álcool 70% Gel'),
+  ('2025-02-13 09:00:00', 'ENTRADA',  30, 19, NULL, 2, 3, 'Recebimento OC #7 — Camiseta Polo P'),
+  ('2025-02-13 09:15:00', 'ENTRADA',  40, 20, NULL, 2, 3, 'Recebimento OC #7 — Camiseta Polo M'),
+  ('2025-02-13 09:30:00', 'ENTRADA',  25, 21, NULL, 2, 3, 'Recebimento OC #7 — Camiseta Polo G'),
+
+  -- -------------------------------------------------------
+  -- TRANSFERÊNCIAS (5) — redistribuição entre depósitos
+  -- Constraint: id_deposito_origem IS NOT NULL
+  --             id_deposito_destino IS NOT NULL
+  -- Após ENTRADAs: dep1(prod1)=10; dep1(prod13)=100;
+  --                dep1(prod3)=8;  dep1(prod10)=15
+  --                dep2(prod19)=30
+  -- -------------------------------------------------------
+  ('2025-02-01 10:00:00', 'TRANSFERENCIA',  5,  1, 1, 6, 4, 'Abastecimento Filial SP — Smartphone'),
+  ('2025-02-01 10:30:00', 'TRANSFERENCIA', 10, 13, 1, 6, 4, 'Abastecimento Filial SP — Detergente'),
+  ('2025-02-01 11:00:00', 'TRANSFERENCIA',  3,  3, 1, 7, 4, 'Abastecimento Filial RJ — Notebook Dell'),
+  ('2025-02-01 11:30:00', 'TRANSFERENCIA',  5, 10, 1, 7, 4, 'Abastecimento Filial RJ — Furadeira'),
+  ('2025-02-20 09:00:00', 'TRANSFERENCIA', 10, 19, 2, 1, 2, 'Acerto estoque — Camiseta P: Sul para Central'),
+
+  -- -------------------------------------------------------
+  -- SAÍDAS (6) — expedição de pedidos de venda
+  -- Constraint: id_deposito_origem IS NOT NULL
+  --             id_deposito_destino IS NULL
+  -- Saldo disponível após transferências:
+  --   dep6(prod1)=5  dep1(prod4)=30  dep1(prod7)=100
+  --   dep1(prod13)=90 dep1(prod14)=60 dep1(prod1)=5
+  -- -------------------------------------------------------
+  ('2025-01-21 14:00:00', 'SAIDA',  1,  1, 6, NULL, 3, 'Expedição PV #1 — Smartphone (Filial SP)'),
+  ('2025-01-21 14:10:00', 'SAIDA',  2,  4, 1, NULL, 3, 'Expedição PV #1 — Mouse Logitech (Central)'),
+  ('2025-01-26 10:00:00', 'SAIDA',  5,  7, 1, NULL, 4, 'Expedição PV #3 — Resma de Papel (Central)'),
+  ('2025-02-06 09:00:00', 'SAIDA', 20, 13, 1, NULL, 5, 'Expedição PV #5 — Detergente (Central)'),
+  ('2025-02-06 09:10:00', 'SAIDA', 12, 14, 1, NULL, 5, 'Expedição PV #5 — Desinfetante (Central)'),
+  ('2025-02-19 10:00:00', 'SAIDA',  1,  1, 1, NULL, 2, 'Expedição PV #8 — Smartphone (Central)'),
+
+  -- -------------------------------------------------------
+  -- RESERVAS (2) — pedidos confirmados aguardando expedição
+  -- Constraint: id_deposito_origem IS NOT NULL
+  -- O gatilho NÃO altera quantidades; apenas registra o evento
+  -- -------------------------------------------------------
+  ('2025-03-06 09:00:00', 'RESERVA',  2, 22, 1, NULL, 4, 'Reserva PV #12 — Cadeira Giratória (aguarda expedição)'),
+  ('2025-03-09 10:00:00', 'RESERVA', 20,  7, 1, NULL, 5, 'Reserva PV #13 — Resma de Papel (aguarda expedição)'),
+
+  -- -------------------------------------------------------
+  -- BAIXA DE RESERVAS (2) — estorno de reservas
+  -- Constraint: id_deposito_origem IS NOT NULL
+  -- -------------------------------------------------------
+  ('2025-02-21 09:00:00', 'BAIXA_RESERVA',  5,  19, 2, NULL, 3, 'Estorno reserva PV #9 (cancelado) — Camiseta Polo P'),
+  ('2025-03-09 11:00:00', 'BAIXA_RESERVA',  5,   7, 1, NULL, 5, 'Ajuste de quantidade — Reserva PV #13 (redução parcial)');
+
+
+-- =============================================================
+-- 5.1 INSERÇÃO MANUAL DE estoque_deposito (21 linhas)
+-- Saldos calculados a partir das 30 movimentações inseridas.
+-- Execute apenas se os gatilhos estiverem DESATIVADOS.
+-- =============================================================
+INSERT INTO estoque_deposito (id_produto, id_deposito, quantidade) VALUES
+  -- Depósito Central (id=1)
+  ( 1, 1,  4),  -- Smartphone Samsung  : +10 entrada, -5 transf., -1 saída = 4
+  ( 2, 1,  5),  -- Tablet iPad         : +5 entrada = 5
+  ( 3, 1,  5),  -- Notebook Dell       : +8 entrada, -3 transf. = 5
+  ( 4, 1, 28),  -- Mouse Logitech      : +30 entrada, -2 saída = 28
+  ( 6, 1, 10),  -- Monitor LG          : +10 entrada = 10
+  ( 7, 1, 95),  -- Resma de Papel      : +100 entrada, -5 saída = 95
+  ( 8, 1, 50),  -- Caneta Esferográf.  : +50 entrada = 50
+  (10, 1, 10),  -- Furadeira Bosch     : +15 entrada, -5 transf. = 10
+  (11, 1, 50),  -- Chave de Fenda      : +50 entrada = 50
+  (13, 1, 70),  -- Detergente Líquido  : +100 entrada, -10 transf., -20 saída = 70
+  (14, 1, 48),  -- Desinfetante Pinho  : +60 entrada, -12 saída = 48
+  (15, 1, 80),  -- Álcool 70% Gel      : +80 entrada = 80
+  (19, 1, 10),  -- Camiseta Polo P     : +10 transf. do Dep. Sul = 10
+  (22, 1,  0),  -- Cadeira Giratória   : 0 (apenas RESERVA registrada; saldo não alterado)
+  -- Depósito Sul (id=2)
+  (19, 2, 20),  -- Camiseta Polo P     : +30 entrada, -10 transf. = 20
+  (20, 2, 40),  -- Camiseta Polo M     : +40 entrada = 40
+  (21, 2, 25),  -- Camiseta Polo G     : +25 entrada = 25
+  -- Filial São Paulo (id=6)
+  ( 1, 6,  4),  -- Smartphone Samsung  : +5 transf., -1 saída = 4
+  (13, 6, 10),  -- Detergente Líquido  : +10 transf. = 10
+  -- Filial Rio de Janeiro (id=7)
+  ( 3, 7,  3),  -- Notebook Dell       : +3 transf. = 3
+  (10, 7,  5);  -- Furadeira Bosch     : +5 transf. = 5
+
+
+-- =============================================================
+-- 5.2 ATUALIZAÇÃO MANUAL DE produto.estoque_atual
+-- Somatório de todas as linhas de estoque_deposito por produto.
+-- Execute imediatamente após o INSERT acima.
+-- =============================================================
+UPDATE produto SET estoque_atual =  8 WHERE id_produto =  1;  -- Central 4 + Filial SP 4
+UPDATE produto SET estoque_atual =  5 WHERE id_produto =  2;  -- Central 5
+UPDATE produto SET estoque_atual =  8 WHERE id_produto =  3;  -- Central 5 + Filial RJ 3
+UPDATE produto SET estoque_atual = 28 WHERE id_produto =  4;  -- Central 28
+UPDATE produto SET estoque_atual = 10 WHERE id_produto =  6;  -- Central 10
+UPDATE produto SET estoque_atual = 95 WHERE id_produto =  7;  -- Central 95
+UPDATE produto SET estoque_atual = 50 WHERE id_produto =  8;  -- Central 50
+UPDATE produto SET estoque_atual = 15 WHERE id_produto = 10;  -- Central 10 + Filial RJ 5
+UPDATE produto SET estoque_atual = 50 WHERE id_produto = 11;  -- Central 50
+UPDATE produto SET estoque_atual = 80 WHERE id_produto = 13;  -- Central 70 + Filial SP 10
+UPDATE produto SET estoque_atual = 48 WHERE id_produto = 14;  -- Central 48
+UPDATE produto SET estoque_atual = 80 WHERE id_produto = 15;  -- Central 80
+UPDATE produto SET estoque_atual = 30 WHERE id_produto = 19;  -- Sul 20 + Central 10
+UPDATE produto SET estoque_atual = 40 WHERE id_produto = 20;  -- Sul 40
+UPDATE produto SET estoque_atual = 25 WHERE id_produto = 21;  -- Sul 25
+-- Demais produtos (sem movimentações): estoque_atual permanece 0.
+
+-- =============================================================
+-- ALTERNATIVA: recalcular estoque_atual via subquery
+-- (seguro para reexecutar a qualquer momento)
+-- =============================================================
+UPDATE produto AS p
+SET estoque_atual = COALESCE(
+    (SELECT SUM(ed.quantidade)
+     FROM estoque_deposito ed
+     WHERE ed.id_produto = p.id_produto), 0);
+	 
+COMMIT;
+</p>
 
 
 </main>
