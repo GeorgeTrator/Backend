@@ -162,6 +162,7 @@ Esta consulta deve utilizar as tabelas item_pedido_venda e produto, contando qua
 
 <h2>Dump para criar banco de dados </h2>
 <p>
+    <pre>
     -- Esquema
 
 CREATE TABLE categoria (
@@ -703,6 +704,7 @@ SET estoque_atual = COALESCE(
      WHERE ed.id_produto = p.id_produto), 0);
 	 
 COMMIT;
+    </pre>
 </p>
 
 
