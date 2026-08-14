@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exercício 01 — Revisão Diagrama ER</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f4f6;
+      color: #222;
+      line-height: 1.65;
+    }
+
+    main {
+      width: min(92%, 1000px);
+      margin: 40px auto;
+      background: #fff;
+      padding: 40px 48px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 32px;
+      font-size: 2rem;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+
+    p {
+      margin: 0 0 18px;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 28px;
+      color: #555;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      text-decoration: underline;
+    }
+
+    .statement {
+      white-space: pre-line;
+    }
+
+    .final {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid #ddd;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 28px 22px;
+        margin: 20px auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="index.html">← Voltar para a lista</a>
+
+    <h1>Exercício 01 — Revisão Diagrama ER</h1>
+
+    <section class="statement">
+      <h2>SISTEMA DE CONTROLE DE ESTOQUE</h2>
+
+      <p>O sistema deve gerenciar o estoque de uma empresa que comercializa produtos diversos. Os produtos são identificados por um código único, possuem descrição, unidade de medida (kg, litro, unidade, caixa, etc.), preço de custo, preço de venda, estoque mínimo permitido e estoque atual. Cada produto pertence a uma categoria de produtos, que possui código, nome e descrição. Os produtos podem ser fornecidos por diferentes fornecedores, sendo que cada fornecedor é cadastrado com CNPJ, razão social, nome fantasia, endereço completo (rua, número, complemento, bairro, cidade, estado, CEP) e telefones de contato. Um produto pode ser fornecido por vários fornecedores, e cada fornecedor pode fornecer diversos produtos. Para cada combinação produto-fornecedor, o sistema deve registrar o preço praticado pelo fornecedor e o prazo de entrega em dias.</p>
+
+      <p>O sistema deve controlar as movimentações de estoque, registrando tanto as entradas quanto as saídas de produtos. Cada movimentação possui um número sequencial, data e hora da operação, tipo (entrada ou saída), quantidade movimentada e o produto envolvido. As entradas de estoque ocorrem através de compras realizadas junto aos fornecedores. Cada compra é identificada por um número, possui data de emissão, data prevista de entrega, valor total, status (pendente, recebida parcialmente, recebida totalmente, cancelada) e está associada a um fornecedor. Uma compra pode conter vários itens de compra, sendo que cada item especifica o produto, a quantidade solicitada, o preço unitário negociado e a quantidade já recebida. Quando uma compra é recebida, total ou parcialmente, devem ser geradas as correspondentes movimentações de entrada no estoque e o estoque atual dos produtos deve ser automaticamente atualizado.</p>
+
+      <p>As saídas de estoque ocorrem através de vendas ou requisições internas. As vendas são registradas com número da venda, data e hora, valor total e o cliente. Os clientes são cadastrados com código, nome ou razão social, CPF ou CNPJ, endereço completo e telefones de contato. Cada venda possui vários itens de venda, onde cada item contém o produto vendido, quantidade, preço unitário praticado na venda e o subtotal. Ao registrar uma venda, o sistema deve verificar se há estoque suficiente para atender a quantidade solicitada de cada produto. Caso a venda seja confirmada, devem ser geradas as movimentações de saída correspondentes e o estoque atual deve ser reduzido automaticamente. Se após uma saída o estoque atual de um produto ficar abaixo do estoque mínimo, o sistema deve registrar um alerta.</p>
+
+      <p>O sistema também deve permitir o controle de inventários físicos do estoque. Um inventário é identificado por um número, possui data de realização, status (em andamento, finalizado) e observações gerais. Para cada inventário, são registradas as contagens físicas de cada produto, incluindo a quantidade contada e eventuais observações específicas. Ao finalizar um inventário, o sistema deve comparar as quantidades contadas com os estoques registrados no sistema e, caso haja divergências, gerar movimentações de ajuste (entrada ou saída) para corrigir o estoque atual, registrando também o motivo do ajuste.</p>
+
+      <p>Os usuários do sistema são cadastrados com login, senha criptografada, nome completo, e-mail e perfil de acesso. Todas as movimentações de estoque devem registrar qual usuário realizou a operação. O sistema deve manter um histórico de alterações de preço dos produtos, registrando a data da alteração, o preço anterior, o novo preço e o usuário responsável pela mudança.</p>
+
+      <p class="final">Projete um diagrama EER para o enunciado acima, sendo que esse diagrama deve modelar os relacionamentos pertinentes entre os dados.</p>
+    </section>
+  </main>
+</body>
+</html>

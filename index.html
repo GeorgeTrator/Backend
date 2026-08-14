@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Exercícios</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, Helvetica, sans-serif;
+      flex-direction: column;
+      background: #f3f4f6;
+      color: #222;
+    }
+
+
+    main {
+      width: min(90%, 520px);
+      background: #fff;
+      padding: 42px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 28px;
+      text-align: center;
+      font-size: 2rem;
+    }
+
+    .exercise {
+      display: block;
+      padding: 18px 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      color: #222;
+      text-decoration: none;
+      transition: all 0.2s, transform 0.2s;
+    }
+
+    .exercise:hover {
+      background: #f7f7f7;
+      transform: translateY(-2px);
+    }
+
+    .exercise strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .exercise span {
+      color: #666;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+    <h1 id="title">Exercícios Dev. Web BackEnd</h1>
+  <main>
+    <h1 >Lista de Exercícios</h1>
+
+    <a class="exercise" href="ex01.html">
+      <strong>Exercício 01 — Revisão Diagrama ER</strong>
+      <span>Sistema de Controle de Estoque</span>
+    </a>
+    <a class="exercise" href="ex02.html">
+      <strong>Exercício 02 - Revisão SQL</strong>
+      <span>Buscas para Sistema de Controle de Estoque</span>
+    </a>
+  </main>
+</body>
+</html>

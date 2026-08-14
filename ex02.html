@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercício 02 — Consultas em SQL</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f4f6;
+            color: #222;
+            line-height: 1.7;
+        }
+
+        main {
+            width: min(95%, 1100px);
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.10);
+        }
+
+        a {
+            text-decoration: none;
+            color: #444;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        h2 {
+            margin-top: 35px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        ul {
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .consulta{
+            margin-top:35px;
+        }
+
+        .consulta h3{
+            margin-bottom:8px;
+        }
+
+        .consulta p{
+            margin-top:0;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<main>
+
+<a href="index.html">← Voltar para a Lista de Exercícios</a>
+
+<h1>Exercício 02 — Criação de Consultas em SQL</h1>
+
+<p>
+Considerando o esquema de dados descrito abaixo, que modela um sistema de gestão de estoque,
+faça a especificação dos comandos SQL para as consultas solicitadas.
+</p>
+
+<h2>Descrição das Entidades</h2>
+
+<ul>
+
+<li><strong>CATEGORIA</strong>: id_categoria (PK), nome_categoria, descricao.</li>
+
+<li><strong>FORNECEDOR</strong>: id_fornecedor (PK), nome_fornecedor, cnpj, telefone, email, endereco.</li>
+
+<li><strong>PRODUTO</strong>: id_produto (PK), codigo_produto (Unique), nome_produto, descricao, preco_custo, preco_venda, estoque_minimo, estoque_atual, id_categoria (FK), id_fornecedor (FK).</li>
+
+<li><strong>DEPOSITO</strong>: id_deposito (PK), nome_deposito, localizacao.</li>
+
+<li><strong>ESTOQUE_DEPOSITO</strong>: id_estoque (PK), id_produto (FK), id_deposito (FK), quantidade.</li>
+
+<li><strong>CLIENTE</strong>: id_cliente (PK), nome_cliente, cpf_cnpj, telefone, email, endereco.</li>
+
+<li><strong>USUARIO</strong>: id_usuario (PK), login, senha_hash, nome_completo, ativo.</li>
+
+<li><strong>ORDEM_COMPRA</strong>: id_ordem_compra (PK), data_emissao, data_previsao, status, valor_total, id_fornecedor (FK).</li>
+
+<li><strong>ITEM_ORDEM_COMPRA</strong>: id_item_compra (PK), id_ordem_compra (FK), id_produto (FK), quantidade, valor_unitario, subtotal.</li>
+
+<li><strong>PEDIDO_VENDA</strong>: id_pedido_venda (PK), data_pedido, status, valor_total, id_cliente (FK), id_usuario (FK).</li>
+
+<li><strong>ITEM_PEDIDO_VENDA</strong>: id_item_venda (PK), id_pedido_venda (FK), id_produto (FK), quantidade, valor_unitario, subtotal.</li>
+
+<li><strong>MOVIMENTACAO</strong>: id_movimentacao (PK), data_movimentacao, tipo_movimentacao, quantidade, id_produto (FK), id_deposito_origem (FK), id_deposito_destino (FK), id_usuario (FK), observacao.</li>
+
+</ul>
+
+<h2>Relacionamentos</h2>
+
+<ul>
+<li>Uma Categoria possui N Produtos (1:N).</li>
+<li>Um Fornecedor fornece N Produtos (1:N).</li>
+<li>Um Produto possui estoque em N Depósitos (N:N).</li>
+<li>Um Fornecedor recebe N Ordens de Compra (1:N).</li>
+<li>Uma Ordem de Compra possui N Itens (1:N).</li>
+<li>Um Cliente realiza N Pedidos de Venda (1:N).</li>
+<li>Um Pedido de Venda possui N Itens (1:N).</li>
+<li>Um Usuário registra N Movimentações e N Pedidos de Venda.</li>
+<li>Uma Movimentação refere-se a um Produto e pode envolver um ou dois Depósitos.</li>
+</ul>
+
+<h2>Consultas</h2>
+
+<div class="consulta">
+<h3>Consulta 1 — Produtos com Estoque Abaixo do Mínimo</h3>
+<p>
+    Esta consulta deve utilizar a tabela produto, selecionando apenas os produtos que têm estoque atual abaixo do mínimo, e deve projetar o seu código, nome, estoque atual e mínimo.
+</p>
+</div>
+
+<div class="consulta">
+    <h3>Consulta 2 — Posição de Estoque por Depósito</h3>
+    <p>
+        Esta consulta deve utilizar as tabelas estoque_deposito, deposito e produto, exibindo apenas as posições com quantidade maior que zero, e deve projetar o nome do depósito, o nome do produto e a quantidade disponível.
+    </p>
+</div>
+<div class="consulta">
+    <h3>Consulta 3 — Top 5 Produtos Mais Vendidos</h3>
+    <p>
+Esta consulta deve utilizar as tabelas item_pedido_venda e produto, contando quantas vezes cada produto foi incluído em pedidos de venda, e deve retornar apenas os cinco produtos com maior frequência de venda.    </p>
+</div>
+<div class="consulta">
+    <h3>Consulta 4 — Valor Total em Estoque por Depósito com Média de Preços</h3>
+    <p>
+        Esta consulta deve utilizar as tabelas deposito, estoque_deposito e produto, considerando apenas posições com quantidade maior que zero, e deve retornar por depósito o número de produtos distintos armazenados, a quantidade total de itens, o valor total em estoque e o preço médio dos produtos.
+    </p>
+</div>
+<div class="consulta">
+    <h3>Consulta 5 — Usuários e Volume de Movimentações Registradas (incluindo usuários sem registros)</h3>
+    <p>
+        Esta consulta deve utilizar as tabelas usuario e movimentacao, garantindo que usuários sem movimentações também apareçam no resultado, e deve retornar por usuário o total de movimentações realizadas, o volume total de itens movimentados e a quantidade de produtos e tipos de operação distintos.
+    </p>
+</div>
+
+
+
+</main>
+
+</body>
+</html>
