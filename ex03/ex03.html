@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercício 03 — Conectando Java ao MySQL</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f4f6;
+            color: #222;
+            line-height: 1.7;
+        }
+
+        main {
+            width: min(95%, 1100px);
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.10);
+        }
+
+        a {
+            text-decoration: none;
+            color: #444;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        h2 {
+            margin-top: 35px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        ul {
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        pre {
+            background: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: "Courier New", monospace;
+        }
+
+        /* Bloco de download */
+        .download-box {
+            margin: 30px 0;
+            padding: 22px 24px;
+            border: 2px dashed #999;
+            border-radius: 10px;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .download-box div h3 {
+            margin: 0 0 6px;
+        }
+
+        .download-box div p {
+            margin: 0;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: #2f6fed;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .download-btn:hover {
+            background: #234fb0;
+            text-decoration: none;
+        }
+
+        /* Passos */
+        .passo {
+            margin-top: 30px;
+            padding: 20px 22px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .passo h3 {
+            margin-top: 0;
+        }
+
+        /* Caixa de comentário explicando termos Java */
+        .explica {
+            margin-top: 14px;
+            padding: 12px 16px;
+            background: #eef4ff;
+            border-left: 4px solid #2f6fed;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .explica strong {
+            color: #1a3f8f;
+        }
+    </style>
+</head>
+
+<body>
+
+<main>
+
+<a href="index.html">← Voltar para a Lista de Exercícios</a>
+
+<h1>Exercício 03 — Conectando Java ao MySQL</h1>
+
+<p>
+Neste exercício vamos conectar uma aplicação Java ao nosso banco de dados MySQL.
+Diferente dos exercícios anteriores, aqui a ideia é colocar a mão na massa: baixar o projeto já
+pronto na estrutura correta, configurar no VS Code e rodar de verdade uma inserção e uma busca
+no banco de dados.
+</p>
+
+<h2>Baixe o projeto</h2>
+
+<div class="download-box">
+    <div>
+        <h3>📦 projeto-base.zip</h3>
+        <p>Já vem com as pastas <code>lib/</code>, <code>src/util/</code> e <code>src/model/</code> organizadas.</p>
+    </div>
+    <a class="download-btn" href="meu-projeto.zip" download>Baixar projeto (.zip)</a>
+</div>
+
+<p>
+Extraia o <code>.zip</code> em uma pasta no seu computador (Área de Trabalho, por exemplo) e abra
+essa pasta no VS Code (<strong>Arquivo → Abrir Pasta...</strong>).
+</p>
+
+<h2>Passo a passo</h2>
+
+<div class="passo">
+    <h3>Passo 1 — Instalar a extensão do Java</h3>
+    <p>
+        No VS Code, vá até a aba de Extensões e instale o pacote <strong>Extension Pack for Java</strong>
+        (da Microsoft). Isso adiciona o suporte necessário para rodar código Java direto pelo botão
+        <strong>Run</strong>.
+    </p>
+</div>
+
+<div class="passo">
+    <h3>Passo 2 — Vincular o driver do MySQL (.jar)</h3>
+    <p>
+        O projeto que você baixou já vem com o arquivo <code>mysql-connector-j.jar</code> dentro da
+        pasta <code>lib/</code>. Precisamos avisar o VS Code que esse arquivo existe:
+    </p>
+    <ul>
+        <li>No painel Explorer (lado esquerdo), role até <strong>Java Projects</strong>.</li>
+        <li>Passe o mouse sobre <strong>Referenced Libraries</strong> e clique no ícone <code>+</code>.</li>
+        <li>Selecione o arquivo <code>.jar</code> que está dentro de <code>lib/</code>.</li>
+    </ul>
+    <div class="explica">
+        <strong>Por que essa pasta lib/?</strong> Java sozinho não sabe conversar com o MySQL.
+        Esse arquivo <code>.jar</code> é o "tradutor" (chamado de <em>driver</em>) que permite que o
+        Java envie e receba dados do banco. Colocamos ele em uma pasta separada (<code>lib/</code>,
+        de "library") só para deixar organizado e separado do nosso próprio código.
+    </div>
+</div>
+
+<div class="passo">
+    <h3>Passo 3 — Criar o banco de dados no MySQL</h3>
+    <p>
+        Abra o MySQL (Workbench, terminal ou a ferramenta que estiver usando) e rode o script abaixo
+        para criar a tabela de teste:
+    </p>
+    <pre><code>CREATE DATABASE IF NOT EXISTS sistema_db;
+USE sistema_db;
+
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL
+);
+
+INSERT INTO usuarios (nome, email) VALUES ('Carlos Silva', 'carlos@email.com');</code></pre>
+</div>
+
+<div class="passo">
+    <h3>Passo 4 — Configurar a conexão</h3>
+    <p>
+        Abra o arquivo <code>src/util/Conexao.java</code> (ele já está pronto no projeto) e troque
+        <code>USER</code> e <code>PASS</code> pelo usuário e senha do seu MySQL:
+    </p>
+    <pre><code>package util;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class Conexao {
+    private static final String URL = "jdbc:mysql://localhost:3306/sistema_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC";
+    private static final String USER = "root";     // troque pelo seu usuario do MySQL
+    private static final String PASS = "sua_senha"; // troque pela sua senha do MySQL
+
+    public static Connection getConexao() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASS);
+    }
+}</code></pre>
+    <div class="explica">
+        <strong>O que é essa Connection?</strong> Pense nela como uma "ligação telefônica" aberta
+        entre o seu programa Java e o banco de dados. Enquanto ela estiver aberta, dá pra mandar
+        comandos SQL (inserir, buscar, etc). No fim, é importante desligar essa ligação — é isso
+        que o <code>try (...)</code> do próximo passo faz automaticamente por nós.
+    </div>
+</div>
+
+<div class="passo">
+    <h3>Passo 5 — Entender a pasta model/ (DAO)</h3>
+    <p>
+        Dentro de <code>src/model/</code> existem dois arquivos já prontos: <code>Usuario.java</code>
+        e <code>UsuarioDAO.java</code>.
+    </p>
+    <pre><code>package model;
+
+public class UsuarioDAO {
+
+    public void inserir(Usuario usuario) {
+        String sql = "INSERT INTO usuarios (nome, email) VALUES (?, ?)";
+
+        try (Connection conn = Conexao.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, usuario.getNome());
+            stmt.setString(2, usuario.getEmail());
+            stmt.executeUpdate();
+            System.out.println("[Sucesso] Novo usuário inserido no banco.");
+
+        } catch (SQLException e) {
+            System.err.println("[Erro] Falha ao inserir: " + e.getMessage());
+        }
+    }
+}</code></pre>
+    <div class="explica">
+        <strong>Por que separar em Usuario e UsuarioDAO?</strong>
+        <code>Usuario</code> é só o "molde" dos dados (nome, email...), sem lógica nenhuma — chamamos
+        isso de <strong>Model</strong>. Já o <code>UsuarioDAO</code> é quem sabe conversar com o banco
+        (inserir, buscar) — chamamos isso de <strong>DAO</strong> (Data Access Object, ou "objeto de
+        acesso a dados"). Separar assim evita misturar "o que é o dado" com "como eu busco/salvo esse
+        dado", o que deixa o código mais fácil de entender e de corrigir depois.
+        <br><br>
+        <strong>E o try/catch?</strong> O <code>try</code> é onde colocamos o código que
+        <em>pode</em> dar erro (por exemplo, o banco estar desligado). Se der erro dentro do
+        <code>try</code>, o Java pula direto para o <code>catch</code>, que "pega" esse erro e evita
+        que o programa quebre — em vez disso, mostramos uma mensagem explicando o que aconteceu.
+    </div>
+</div>
+
+<div class="passo">
+    <h3>Passo 6 — Rodar o projeto</h3>
+    <p>
+        Abra o arquivo <code>src/Main.java</code>, clique no botão <strong>Run</strong> que aparece
+        acima do método <code>main</code> (ou pressione <code>F5</code>). Se tudo estiver certo, o
+        terminal vai mostrar a inserção de um novo usuário e depois a lista de todos os usuários do
+        banco.
+    </p>
+</div>
+
+<h2>Estrutura final do projeto</h2>
+
+<pre><code>meu-projeto/
+├── lib/
+│   └── mysql-connector-j.jar
+└── src/
+    ├── util/
+    │   └── Conexao.java
+    ├── model/
+    │   ├── Usuario.java
+    │   └── UsuarioDAO.java
+    └── Main.java</code></pre>
+
+</main>
+
+</body>
+</html>
