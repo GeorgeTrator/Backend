@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula: Introdução ao Back-End</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* VARIÁVEIS GLOBAIS SEMÂNTICAS */
+        :root {
+            --bg-main: #00204E;
+            --bg-alt: #003060;
+            --bg-dark: #1a1a1a;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-light: #f5f5f5;
+            --text-muted: #daffde;
+            --text-highlight: #deff9a;
+            --accent-blue: #00A8E8;
+            --border-card: 6px solid #00A8E8;
+            --border-code: 1px solid #00A8E8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; background-color: var(--bg-main); }
+
+        body { color: var(--text-light); font-family: 'Urbanist', sans-serif; overflow-x: hidden; }
+
+        a { text-decoration: none; transition: transform 1.0s ease; display: inline-block; color: var(--accent-blue); }
+        a:hover { transform: scale(1.05); }
+
+        /* ESTRUTURA DOS SLIDES EM SCROLL */
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .slide.visible { opacity: 1; transform: translateY(0); }
+        .slide-alt { background-color: var(--bg-alt); }
+
+        /* TITULOS */
+        .slide-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .slide-title span { color: var(--text-light); }
+
+        /* LAYOUTS */
+        .content-area { width: 100%; max-width: 1200px; margin: 0 auto; }
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+
+        /* ELEMENTOS DE TEXTO */
+        p, li { font-size: 22px; line-height: 1.6; color: var(--text-muted); margin-bottom: 20px; }
+        strong { color: var(--accent-blue); }
+        .highlight { color: var(--text-highlight); font-weight: 700; }
+        h3 { font-size: 30px; margin-bottom: 20px; color: var(--text-light); }
+
+        /* LISTAS */
+        ul { list-style: none; margin-bottom: 20px; }
+        ul li::before { content: "•"; color: var(--accent-blue); font-weight: bold; display: inline-block; width: 1em; margin-left: -1em; }
+
+        /* BLOCOS DE CÓDIGO */
+        code { background: var(--bg-dark); padding: 4px 8px; border-radius: 4px; color: var(--text-highlight); font-family: 'Courier New', Courier, monospace; }
+        pre {
+            background: var(--bg-dark);
+            padding: 25px;
+            border-radius: 12px;
+            border: var(--border-code);
+            overflow-x: auto;
+            font-size: 18px;
+            color: var(--text-light);
+            font-family: 'Courier New', Courier, monospace;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* CAIXAS DE EXERCÍCIO E OBSERVAÇÕES */
+        .exercise-box { background: var(--bg-card); border-left: var(--border-card); padding: 25px; margin-top: 25px; border-radius: 0 12px 12px 0; }
+        .obs-box { background: rgba(222, 255, 154, 0.05); border-left: 6px solid var(--text-highlight); padding: 25px; margin-top: 35px; border-radius: 0 12px 12px 0; }
+
+        /* ÁREA INTERATIVA */
+        .interactive-container { background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 25px; margin-bottom: 25px; }
+        .control-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 20px; }
+        .control-row label { font-size: 20px; color: var(--text-light); font-weight: 500; }
+        .interactive-input {
+            background: var(--bg-dark); border: 1px solid var(--accent-blue); color: var(--text-light);
+            padding: 10px 15px; font-size: 18px; border-radius: 6px; outline: none; font-family: 'Urbanist', sans-serif;
+        }
+        .interactive-btn {
+            background: var(--accent-blue); color: var(--bg-main); border: none; padding: 10px 22px;
+            font-size: 18px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: background 0.2s, transform 0.1s;
+        }
+        .interactive-btn:hover { background: var(--text-highlight); }
+        .interactive-btn:active { transform: scale(0.98); }
+        .interactive-btn.inativo { background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.25); }
+        .interactive-btn.inativo:hover { border-color: var(--text-highlight); color: var(--text-highlight); }
+
+        /* DIAGRAMA CLIENTE-SERVIDOR */
+        .fluxo { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; margin-top: 20px; }
+        .fluxo-caixa {
+            background: var(--bg-dark); border: 1px solid var(--accent-blue); border-radius: 12px;
+            padding: 25px; text-align: center;
+        }
+        .fluxo-caixa i { font-size: 46px; color: var(--accent-blue); display: block; margin-bottom: 12px; }
+        .fluxo-caixa h3 { font-size: 24px; margin-bottom: 6px; }
+        .fluxo-caixa p { font-size: 17px; margin-bottom: 0; }
+        .fluxo-setas p { font-size: 16px; margin-bottom: 6px; color: var(--text-highlight); white-space: nowrap; }
+
+        /* ANATOMIA DA URL */
+        .url-linha { font-family: 'Courier New', Courier, monospace; font-size: 26px; background: var(--bg-dark); border: var(--border-code); border-radius: 12px; padding: 22px; overflow-x: auto; white-space: nowrap; }
+        .url-parte { padding: 4px 2px; border-bottom: 3px solid transparent; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+        .url-parte:hover, .url-parte.ativa { color: var(--text-highlight); border-bottom-color: var(--text-highlight); }
+
+        /* CÓDIGOS DE STATUS */
+        .status-grade { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        .status-chip {
+            background: var(--bg-dark); border: 1px solid var(--accent-blue); color: var(--text-light);
+            padding: 10px 18px; border-radius: 30px; font-size: 20px; font-weight: 700; cursor: pointer;
+            font-family: 'Courier New', Courier, monospace; transition: background 0.2s, color 0.2s;
+        }
+        .status-chip:hover, .status-chip.ativa { background: var(--accent-blue); color: var(--bg-main); }
+
+        .bg-shape {
+            position: absolute; top: 10%; right: 5%; width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(0,168,232,0.1) 0%, transparent 70%);
+            z-index: 0; pointer-events: none;
+        }
+        .scroll-indicator {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            font-size: 18px; color: var(--text-highlight); animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+            40% { transform: translate(-50%, -10px); }
+            60% { transform: translate(-50%, -5px); }
+        }
+
+        @media (max-width: 900px) {
+            .slide { padding: 40px 25px; }
+            .slide-title { font-size: 34px; }
+            .two-column { grid-template-columns: 1fr; gap: 25px; }
+            .fluxo { grid-template-columns: 1fr; }
+            p, li { font-size: 19px; }
+            .url-linha { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <section class="slide title-slide visible">
+        <div class="bg-shape"></div>
+        <div class="content-area" style="text-align: center;">
+            <h1 class="slide-title" style="font-size: 70px;">Introdução ao <span>Back-End</span></h1>
+            <p>O que acontece do outro lado da tela</p>
+        </div>
+        <div class="scroll-indicator">Role para baixo para começar <i class="fa-solid fa-chevron-down"></i></div>
+    </section>
+
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">Front-End <span>vs Back-End</span></h2>
+            <p>Até agora, tudo o que você escreveu rodava <strong>dentro do navegador</strong> do usuário. A partir de hoje, vamos escrever código que roda <strong>em outro computador</strong>, longe dele.</p>
+            <div class="two-column" style="align-items: stretch;">
+                <div class="obs-box" style="margin-top: 10px; border-left-color: var(--accent-blue);">
+                    <h3><i class="fa-solid fa-desktop"></i> Front-End</h3>
+                    <ul>
+                        <li>Roda no navegador (Chrome, Firefox…).</li>
+                        <li>HTML, CSS e JavaScript.</li>
+                        <li>Cuida do que o usuário <span class="highlight">vê e clica</span>.</li>
+                        <li>O usuário pode ver todo o código: basta apertar <code>F12</code>.</li>
+                    </ul>
+                </div>
+                <div class="obs-box" style="margin-top: 10px;">
+                    <h3><i class="fa-solid fa-server"></i> Back-End</h3>
+                    <ul>
+                        <li>Roda em um servidor.</li>
+                        <li>Java, banco de dados, regras do negócio.</li>
+                        <li>Cuida de <span class="highlight">guardar, buscar e conferir</span> os dados.</li>
+                        <li>O usuário nunca vê o código. Só vê a resposta.</li>
+                    </ul>
+                </div>
+            </div>
+            <p style="margin-top: 25px;">No seu <span class="highlight">SeuNomeFlix</span>, a lista de filmes está escrita à mão dentro do HTML. Quando o curso terminar, ela virá de um banco de dados de verdade — e para trocar um filme você não vai precisar mexer em uma linha de HTML.</p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">O ciclo <span>requisição-resposta</span></h2>
+            <p>A web inteira funciona em um vaivém muito simples: alguém <strong>pede</strong>, alguém <strong>responde</strong>. Esse pedido se chama <span class="highlight">requisição</span> e a devolução se chama <span class="highlight">resposta</span>.</p>
+
+            <div class="fluxo">
+                <div class="fluxo-caixa">
+                    <i class="fa-solid fa-laptop"></i>
+                    <h3>Cliente</h3>
+                    <p>O navegador do usuário</p>
+                </div>
+                <div class="fluxo-setas" style="text-align: center;">
+                    <p>requisição <i class="fa-solid fa-arrow-right-long"></i></p>
+                    <p><i class="fa-solid fa-arrow-left-long"></i> resposta</p>
+                </div>
+                <div class="fluxo-caixa">
+                    <i class="fa-solid fa-server"></i>
+                    <h3>Servidor</h3>
+                    <p>O nosso programa em Java</p>
+                </div>
+            </div>
+
+            <div class="obs-box">
+                <p style="margin-bottom: 0;">O servidor <strong>nunca começa a conversa</strong>. Ele fica parado, esperando. Se ninguém pedir nada, ele não faz nada. Guarde isso: é a diferença mais importante entre o que você fazia antes e o que vai fazer agora.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">Anatomia de <span>uma URL</span></h2>
+            <p>Toda requisição começa em um endereço. Clique em cada pedaço abaixo para descobrir o que ele faz:</p>
+
+            <div class="interactive-container">
+                <div class="url-linha">
+                    <span class="url-parte" onclick="explicarUrl('protocolo', this)" style="color:#00A8E8">https://</span><span class="url-parte" onclick="explicarUrl('dominio', this)">seunomeflix.com</span><span class="url-parte" onclick="explicarUrl('caminho', this)">/filmes/42</span><span class="url-parte" onclick="explicarUrl('query', this)">?genero=acao&amp;ano=2024</span>
+                </div>
+                <p id="url-result" style="margin-top: 22px; margin-bottom: 0; color: var(--text-highlight); min-height: 60px;">Clique em um pedaço da URL acima.</p>
+            </div>
+
+            <p style="margin-bottom: 0;">Aquele <code>?</code> deve parecer familiar: é exatamente o que apareceu na barra de endereços quando vocês enviaram um formulário com <code>method="get"</code>.</p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">Métodos <span>HTTP</span></h2>
+            <p>Além do endereço, toda requisição carrega um <strong>método</strong>: o verbo que diz qual é a intenção do pedido.</p>
+            <div class="two-column">
+                <div>
+                    <ul>
+                        <li><code>GET</code> — <span class="highlight">quero ver</span> alguma coisa. Buscar a lista de filmes.</li>
+                        <li><code>POST</code> — <span class="highlight">quero criar</span> alguma coisa. Cadastrar um filme novo.</li>
+                        <li><code>PUT</code> — <span class="highlight">quero alterar</span> alguma coisa. Corrigir a nota de um filme.</li>
+                        <li><code>DELETE</code> — <span class="highlight">quero apagar</span> alguma coisa. Tirar um filme do catálogo.</li>
+                    </ul>
+                    <p>Vocês já usaram dois deles sem saber: <code>GET</code> e <code>POST</code> são os valores do atributo <code>method</code> do <code>&lt;form&gt;</code>.</p>
+                </div>
+                <div>
+                    <pre>
+GET    /filmes        → lista todos
+GET    /filmes/42     → mostra o filme 42
+POST   /filmes        → cadastra um novo
+PUT    /filmes/42     → altera o filme 42
+DELETE /filmes/42     → apaga o filme 42
+</pre>
+                    <p style="font-size: 18px; margin-bottom: 0;">Repare: o endereço é quase sempre o mesmo. <strong>O que muda é o verbo.</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">Simulador de <span>requisição</span></h2>
+            <p>Escolha um método, escolha um endereço e envie. Veja o que sai do navegador e o que volta do servidor:</p>
+
+            <div class="interactive-container">
+                <div class="control-row">
+                    <label>Método:</label>
+                    <button class="interactive-btn" id="btn-GET" onclick="escolherMetodo('GET')">GET</button>
+                    <button class="interactive-btn inativo" id="btn-POST" onclick="escolherMetodo('POST')">POST</button>
+                    <button class="interactive-btn inativo" id="btn-DELETE" onclick="escolherMetodo('DELETE')">DELETE</button>
+                </div>
+                <div class="control-row">
+                    <label for="sim-rota">Endereço:</label>
+                    <input type="text" id="sim-rota" class="interactive-input" value="/filmes" style="width: 260px;">
+                    <button class="interactive-btn" onclick="enviarRequisicao()">Enviar requisição</button>
+                </div>
+                <div class="two-column" style="gap: 25px; align-items: start;">
+                    <div>
+                        <p style="font-size: 18px; margin-bottom: 6px;">O que o navegador envia:</p>
+                        <pre id="sim-req" style="margin-top: 0; min-height: 120px;">—</pre>
+                    </div>
+                    <div>
+                        <p style="font-size: 18px; margin-bottom: 6px;">O que o servidor responde:</p>
+                        <pre id="sim-res" style="margin-top: 0; min-height: 120px;">—</pre>
+                    </div>
+                </div>
+            </div>
+            <p style="font-size: 18px; margin-bottom: 0;">Experimente um endereço que não existe, como <code>/series</code>, e veja o que acontece.</p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">Códigos <span>de status</span></h2>
+            <p>Toda resposta vem com um número de três dígitos que resume o que aconteceu. O primeiro dígito já conta a história:</p>
+            <ul>
+                <li><strong>2xx</strong> — deu certo.</li>
+                <li><strong>3xx</strong> — mudou de endereço, procure em outro lugar.</li>
+                <li><strong>4xx</strong> — o <span class="highlight">cliente</span> errou (pediu o que não existe, esqueceu um dado).</li>
+                <li><strong>5xx</strong> — o <span class="highlight">servidor</span> errou (o código quebrou, o banco caiu).</li>
+            </ul>
+
+            <div class="interactive-container">
+                <div class="status-grade">
+                    <span class="status-chip ativa" onclick="explicarStatus('200', this)">200</span>
+                    <span class="status-chip" onclick="explicarStatus('201', this)">201</span>
+                    <span class="status-chip" onclick="explicarStatus('301', this)">301</span>
+                    <span class="status-chip" onclick="explicarStatus('400', this)">400</span>
+                    <span class="status-chip" onclick="explicarStatus('401', this)">401</span>
+                    <span class="status-chip" onclick="explicarStatus('404', this)">404</span>
+                    <span class="status-chip" onclick="explicarStatus('500', this)">500</span>
+                </div>
+                <p id="status-result" style="margin-bottom: 0; color: var(--text-highlight); min-height: 55px;"><strong style="color: var(--text-highlight)">200 OK</strong> — deu tudo certo e a resposta está aí. É o código mais comum da web.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">⚠️ Cuidado: <span>nunca confie no cliente</span></h2>
+            <div class="obs-box">
+                <p style="margin-bottom: 12px;"><strong style="color: var(--text-highlight); font-size: 24px;"><i class="fa-solid fa-triangle-exclamation"></i> Validação no front-end não é segurança</strong></p>
+                <p>Lembra do <code>required</code> e do <code>min</code>/<code>max</code> que vocês usaram nos formulários? Eles são ótimos para <strong>ajudar o usuário</strong> — mas não protegem nada.</p>
+                <p>Qualquer pessoa pode abrir o <code>F12</code>, apagar o atributo <code>required</code> e enviar o formulário vazio. Ou enviar a requisição direto, sem passar pela sua página. O navegador é o computador <em>dela</em>, não o seu: ela manda no que acontece lá.</p>
+                <p style="margin-bottom: 0;">Por isso a regra número um do back-end: <span class="highlight">tudo o que chega no servidor precisa ser conferido de novo, no servidor</span>. Validar no front é conveniência; validar no back é obrigação.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">Mão na <span>Massa</span></h2>
+
+            <div class="exercise-box">
+                <p><strong>Exercício 1: Espiando a conversa</strong></p>
+                <p>Abra qualquer site, aperte <code>F12</code> e vá até a aba <strong>Rede</strong> (ou <em>Network</em>). Recarregue a página. Escolha três linhas da lista e anote, para cada uma: o <strong>método</strong>, o <strong>status</strong> e o <strong>tipo</strong> de arquivo que veio.</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Exercício 2: Achando o começo de tudo</strong></p>
+                <p>Ainda na aba Rede, encontre a <strong>primeira</strong> requisição da lista (a do próprio documento HTML) e clique nela. Anote o endereço completo e o método usado. Depois responda em um comentário: por que essa requisição precisa acontecer <em>antes</em> de todas as outras?</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">Mão na <span>Massa 2</span></h2>
+
+            <div class="exercise-box">
+                <p><strong>Exercício 3: Dissecando uma URL</strong></p>
+                <p>Faça uma busca qualquer no YouTube e copie a URL que aparecer na barra de endereços. Separe e identifique, em um comentário: <strong>protocolo</strong>, <strong>domínio</strong>, <strong>caminho</strong> e <strong>query string</strong>. Diga também qual método HTTP foi usado e como você sabe disso.</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Exercício 4: Provocando um erro</strong></p>
+                <p>Digite, na barra de endereços, um caminho que com certeza não existe em um site conhecido (ex.: <code>https://www.google.com/paginaqueeuinventei</code>). Com a aba Rede aberta, anote o código de status que voltou. Depois explique, em um comentário: esse erro foi <strong>culpa do cliente</strong> ou <strong>do servidor</strong>? E o que precisaria ter acontecido para o código começar com <code>5</code> em vez de <code>4</code>?</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        /* ---------- ANATOMIA DA URL ---------- */
+        const textosUrl = {
+            protocolo: '<strong style="color:var(--text-highlight)">Protocolo</strong> — a "língua" da conversa. O <code>s</code> de <code>https</code> significa que os dados viajam criptografados.',
+            dominio:   '<strong style="color:var(--text-highlight)">Domínio</strong> — o endereço do servidor. É ele que diz <em>com qual computador</em> o navegador vai falar.',
+            caminho:   '<strong style="color:var(--text-highlight)">Caminho</strong> — o que você quer daquele servidor. Aqui: o filme de número 42, dentro da coleção de filmes.',
+            query:     '<strong style="color:var(--text-highlight)">Query string</strong> — informações extras, sempre depois do <code>?</code> e separadas por <code>&amp;</code>. Servem para filtrar e buscar. Fica tudo visível na barra de endereços.'
+        };
+
+        function explicarUrl(parte, el) {
+            document.querySelectorAll('.url-parte').forEach(p => p.classList.remove('ativa'));
+            el.classList.add('ativa');
+            document.getElementById('url-result').innerHTML = textosUrl[parte];
+        }
+
+        /* ---------- SIMULADOR DE REQUISIÇÃO ---------- */
+        let metodoAtual = 'GET';
+
+        function escolherMetodo(m) {
+            metodoAtual = m;
+            ['GET', 'POST', 'DELETE'].forEach(x => {
+                document.getElementById('btn-' + x).classList.toggle('inativo', x !== m);
+            });
+        }
+
+        function enviarRequisicao() {
+            let rota = document.getElementById('sim-rota').value.trim();
+            if (rota === '') rota = '/';
+            if (rota[0] !== '/') rota = '/' + rota;
+
+            const req = document.getElementById('sim-req');
+            const res = document.getElementById('sim-res');
+
+            let corpoReq = metodoAtual + ' ' + rota + ' HTTP/1.1\nHost: seunomeflix.com';
+            if (metodoAtual === 'POST') {
+                corpoReq += '\nContent-Type: application/json\n\n{ "titulo": "Duna", "ano": 2021 }';
+            }
+            req.textContent = corpoReq;
+
+            const ehFilmes = rota === '/filmes' || /^\/filmes\/\d+$/.test(rota);
+
+            if (!ehFilmes) {
+                res.textContent = 'HTTP/1.1 404 Not Found\n\n{ "erro": "Recurso nao encontrado" }\n\nO servidor nao conhece esse endereco.';
+                return;
+            }
+
+            if (metodoAtual === 'GET' && rota === '/filmes') {
+                res.textContent = 'HTTP/1.1 200 OK\nContent-Type: application/json\n\n[\n  { "id": 1, "titulo": "Matrix" },\n  { "id": 2, "titulo": "Interestelar" }\n]';
+            } else if (metodoAtual === 'GET') {
+                res.textContent = 'HTTP/1.1 200 OK\nContent-Type: application/json\n\n{ "id": 42, "titulo": "Cidade de Deus" }';
+            } else if (metodoAtual === 'POST') {
+                res.textContent = 'HTTP/1.1 201 Created\nContent-Type: application/json\n\n{ "id": 88, "titulo": "Duna" }\n\nO filme foi gravado no banco.';
+            } else {
+                res.textContent = 'HTTP/1.1 204 No Content\n\n(sem corpo)\n\nApagado. Nao ha nada para devolver.';
+            }
+        }
+
+        /* ---------- CÓDIGOS DE STATUS ---------- */
+        const textosStatus = {
+            '200': '<strong style="color:var(--text-highlight)">200 OK</strong> — deu tudo certo e a resposta está aí. É o código mais comum da web.',
+            '201': '<strong style="color:var(--text-highlight)">201 Created</strong> — deu certo e alguma coisa nova foi criada. É a resposta típica de um cadastro bem-sucedido.',
+            '301': '<strong style="color:var(--text-highlight)">301 Moved Permanently</strong> — mudou de endereço. O navegador vai sozinho para o novo lugar, geralmente sem você perceber.',
+            '400': '<strong style="color:var(--text-highlight)">400 Bad Request</strong> — o pedido chegou torto. Faltou um campo, o formato estava errado. Culpa do cliente.',
+            '401': '<strong style="color:var(--text-highlight)">401 Unauthorized</strong> — você precisa se identificar antes. É o que a API responde quando falta o login.',
+            '404': '<strong style="color:var(--text-highlight)">404 Not Found</strong> — o servidor existe, respondeu, mas não conhece esse endereço. O mais famoso de todos.',
+            '500': '<strong style="color:var(--text-highlight)">500 Internal Server Error</strong> — o código do servidor quebrou. Aqui a culpa é sua: é o erro que <em>nós</em> vamos causar e consertar neste curso.'
+        };
+
+        function explicarStatus(codigo, el) {
+            document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('ativa'));
+            el.classList.add('ativa');
+            document.getElementById('status-result').innerHTML = textosStatus[codigo];
+        }
+
+        /* ---------- REVELAÇÃO DOS SLIDES ---------- */
+        document.addEventListener("DOMContentLoaded", function () {
+            const slides = document.querySelectorAll('.slide');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.05 });
+            slides.forEach(slide => observer.observe(slide));
+        });
+    </script>
+</body>
+</html>
