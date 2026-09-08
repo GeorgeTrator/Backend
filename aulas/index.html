@@ -174,7 +174,6 @@
     <section class="slide slide-alt">
         <div class="content-area">
             <h2 class="slide-title">Front-End <span>vs Back-End</span></h2>
-            <p>Até agora, tudo o que você escreveu rodava <strong>dentro do navegador</strong> do usuário. A partir de hoje, vamos escrever código que roda <strong>em outro computador</strong>, longe dele.</p>
             <div class="two-column" style="align-items: stretch;">
                 <div class="obs-box" style="margin-top: 10px; border-left-color: var(--accent-blue);">
                     <h3><i class="fa-solid fa-desktop"></i> Front-End</h3>
@@ -195,7 +194,6 @@
                     </ul>
                 </div>
             </div>
-            <p style="margin-top: 25px;">No seu <span class="highlight">SeuNomeFlix</span>, a lista de filmes está escrita à mão dentro do HTML. Quando o curso terminar, ela virá de um banco de dados de verdade — e para trocar um filme você não vai precisar mexer em uma linha de HTML.</p>
         </div>
     </section>
 
@@ -234,12 +232,12 @@
 
             <div class="interactive-container">
                 <div class="url-linha">
-                    <span class="url-parte" onclick="explicarUrl('protocolo', this)" style="color:#00A8E8">https://</span><span class="url-parte" onclick="explicarUrl('dominio', this)">seunomeflix.com</span><span class="url-parte" onclick="explicarUrl('caminho', this)">/filmes/42</span><span class="url-parte" onclick="explicarUrl('query', this)">?genero=acao&amp;ano=2024</span>
+                    <span class="url-parte" onclick="explicarUrl('protocolo', this)" style="color:#00A8E8">https://</span><span class="url-parte" onclick="explicarUrl('dominio', this)">seusite.com</span><span class="url-parte" onclick="explicarUrl('caminho', this)">/filmes/42</span><span class="url-parte" onclick="explicarUrl('query', this)">?genero=acao&amp;ano=2024</span>
                 </div>
                 <p id="url-result" style="margin-top: 22px; margin-bottom: 0; color: var(--text-highlight); min-height: 60px;">Clique em um pedaço da URL acima.</p>
             </div>
 
-            <p style="margin-bottom: 0;">Aquele <code>?</code> deve parecer familiar: é exatamente o que apareceu na barra de endereços quando vocês enviaram um formulário com <code>method="get"</code>.</p>
+            <p style="margin-bottom: 0;">Aquele <code>?</code> marca o fim do caminho principal (path) da página e o início dos dados que serão processados.</code>.</p>
         </div>
     </section>
 
@@ -255,7 +253,6 @@
                         <li><code>PUT</code> — <span class="highlight">quero alterar</span> alguma coisa. Corrigir a nota de um filme.</li>
                         <li><code>DELETE</code> — <span class="highlight">quero apagar</span> alguma coisa. Tirar um filme do catálogo.</li>
                     </ul>
-                    <p>Vocês já usaram dois deles sem saber: <code>GET</code> e <code>POST</code> são os valores do atributo <code>method</code> do <code>&lt;form&gt;</code>.</p>
                 </div>
                 <div>
                     <pre>
@@ -267,6 +264,44 @@ DELETE /filmes/42     → apaga o filme 42
 </pre>
                     <p style="font-size: 18px; margin-bottom: 0;">Repare: o endereço é quase sempre o mesmo. <strong>O que muda é o verbo.</strong></p>
                 </div>
+            </div>
+        </div>
+    </section>
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">O PROTOCOLO HTTP</h2>
+            <p>HTTP = <strong>H</strong>yper <strong>T</strong>ext 
+            <strong>T</strong>ransfer <strong>P</strong>rotocol, ou, simplesmente, Protoclo de Transferência de hipertexto. 
+            É como nos comunicamos com um servidor HTTP. Servidores HTTP, principalmente HTTPs, estão entre os mais comuns entre a web.</p>
+            <p>Como se trata de um <strong>protocolo</strong> nada mais é que um acordo entre as partes. O nosso computador, Cliente, diz que irá
+            falar com o servidor segundo as regras do HTTP e vice-versa. É como quando vamos conhecer alguém: ninguém (exceto os mal educados) começa dizendo o que quer.
+        Nos apresentamos, "Oi", "Olá" e então iniciamos a conversa. HTTP é <strong>UMA</strong> forma de dois computadores conversarem entre si</p>
+        </div>
+        <p>E ele tem mais ou menos essa cara: </p>
+        <pre>
+            POST /filmes HTTP/1.1
+            Host: seusite.com
+            Accept: application/json
+            Content-Type: application/json
+                        </pre>
+        
+    </section>
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">3. O Body <span>(Corpo da Mensagem)</span></h2>
+            <p>O <strong>Body</strong> é a carga útil (payload) transportada junto à requisição ou à resposta. Ele contém os dados propriamente ditos que precisam ser processados ou exibidos.</p>
+            
+            <ul>
+                <li>Métodos como <code>GET</code> geralmente não possuem body, pois buscam apenas informações via URL.</li>
+                <li>Métodos como <code>POST</code> e <code>PUT</code> utilizam o body para trafegar dados estruturados (como objetos JSON ao cadastrar um novo registro).</li>
+            </ul>
+
+            <div class="obs-box">
+                <p style="margin-bottom: 0;"><strong>Exemplo de Body em um POST:</strong></p>
+                <pre>{
+  "titulo": "Duna",
+  "ano": 2021
+}</pre>
             </div>
         </div>
     </section>
@@ -378,7 +413,7 @@ DELETE /filmes/42     → apaga o filme 42
         const textosUrl = {
             protocolo: '<strong style="color:var(--text-highlight)">Protocolo</strong> — a "língua" da conversa. O <code>s</code> de <code>https</code> significa que os dados viajam criptografados.',
             dominio:   '<strong style="color:var(--text-highlight)">Domínio</strong> — o endereço do servidor. É ele que diz <em>com qual computador</em> o navegador vai falar.',
-            caminho:   '<strong style="color:var(--text-highlight)">Caminho</strong> — o que você quer daquele servidor. Aqui: o filme de número 42, dentro da coleção de filmes.',
+            caminho:   '<strong style="color:var(--text-highlight)">Caminho</strong> — o que você quer daquele servidor. Aqui: o filme de número 42, dentro da coleção de filmes. (Pode ser o id_filme = 42 no MySQL)',
             query:     '<strong style="color:var(--text-highlight)">Query string</strong> — informações extras, sempre depois do <code>?</code> e separadas por <code>&amp;</code>. Servem para filtrar e buscar. Fica tudo visível na barra de endereços.'
         };
 
