@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2: Persistindo Dados no Spring Boot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* VARIÁVEIS GLOBAIS SEMÂNTICAS */
+        :root {
+            --bg-main: #00204E;
+            --bg-alt: #003060;
+            --bg-dark: #1a1a1a;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-light: #f5f5f5;
+            --text-muted: #daffde;
+            --text-highlight: #deff9a;
+            --accent-blue: #00A8E8;
+            --border-card: 6px solid #00A8E8;
+            --border-code: 1px solid #00A8E8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; background-color: var(--bg-main); }
+
+        body { color: var(--text-light); font-family: 'Urbanist', sans-serif; overflow-x: hidden; }
+
+        a { text-decoration: none; transition: transform 1.0s ease; display: inline-block; color: var(--accent-blue); }
+        a:hover { transform: scale(1.05); }
+
+        /* ESTRUTURA DOS SLIDES EM SCROLL */
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .slide.visible { opacity: 1; transform: translateY(0); }
+        .slide-alt { background-color: var(--bg-alt); }
+
+        /* TITULOS */
+        .slide-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .slide-title span { color: var(--text-light); }
+
+        /* LAYOUTS */
+        .content-area { width: 100%; max-width: 1200px; margin: 0 auto; }
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+
+        /* ELEMENTOS DE TEXTO */
+        p, li { font-size: 22px; line-height: 1.6; color: var(--text-muted); margin-bottom: 20px; }
+        strong { color: var(--accent-blue); }
+        .highlight { color: var(--text-highlight); font-weight: 700; }
+        h3 { font-size: 30px; margin-bottom: 20px; color: var(--text-light); }
+
+        /* LISTAS */
+        ul { list-style: none; margin-bottom: 20px; }
+        ul li::before { content: "•"; color: var(--accent-blue); font-weight: bold; display: inline-block; width: 1em; margin-left: -1em; }
+
+        /* BLOCOS DE CÓDIGO */
+        code { background: var(--bg-dark); padding: 4px 8px; border-radius: 4px; color: var(--text-highlight); font-family: 'Courier New', Courier, monospace; }
+        pre {
+            background: var(--bg-dark);
+            padding: 25px;
+            border-radius: 12px;
+            border: var(--border-code);
+            overflow-x: auto;
+            font-size: 18px;
+            color: var(--text-light);
+            font-family: 'Courier New', Courier, monospace;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* CAIXAS DE EXERCÍCIO E OBSERVAÇÕES */
+        .exercise-box { background: var(--bg-card); border-left: var(--border-card); padding: 25px; margin-top: 25px; border-radius: 0 12px 12px 0; }
+        .obs-box { background: rgba(222, 255, 154, 0.05); border-left: 6px solid var(--text-highlight); padding: 25px; margin-top: 35px; border-radius: 0 12px 12px 0; }
+
+        .bg-shape {
+            position: absolute; top: 10%; right: 5%; width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(0,168,232,0.1) 0%, transparent 70%);
+            z-index: 0; pointer-events: none;
+        }
+        .scroll-indicator {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            font-size: 18px; color: var(--text-highlight); animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+            40% { transform: translate(-50%, -10px); }
+            60% { transform: translate(-50%, -5px); }
+        }
+
+        @media (max-width: 900px) {
+            .slide { padding: 40px 25px; }
+            .slide-title { font-size: 34px; }
+            .two-column { grid-template-columns: 1fr; gap: 25px; }
+            p, li { font-size: 19px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CAPA -->
+    <section class="slide title-slide visible">
+        <div class="bg-shape"></div>
+        <div class="content-area" style="text-align: center;">
+            <h1 class="slide-title" style="font-size: 70px;">Persistindo Dados: <span>Entidades, Repositórios e o Primeiro CRUD</span></h1>
+            <p>Conectando nossa API ao Banco de Dados com o Spring Data JPA.</p>
+        </div>
+        <div class="scroll-indicator">Role para baixo para começar <i class="fa-solid fa-chevron-down"></i></div>
+    </section>
+
+    <!-- 1. A ENTIDADE JAVA -->
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">1. A Entidade Java: <span>Modelando a Tabela</span></h2>
+            <p>Se a classe Java é a "planta" de uma casa, as anotações do JPA são as instruções para o pedreiro (o próprio JPA) construir a tabela no banco de dados automaticamente. Nós usamos anotações para dizer qual classe vai virar tabela e quais atributos serão colunas.</p>
+            
+            <pre>
+@Entity
+public class Jogo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String nome;
+    private Double preco;
+
+    // Getters e Setters
+}</pre>
+            
+            <div class="obs-box">
+                <h3>As Etiquetas Essenciais:</h3>
+                <ul>
+                    <li><span class="highlight">@Entity</span>: "Avisando ao JPA que essa classe é uma tabela".</li>
+                    <li><span class="highlight">@Id</span>: O RG/CPF único de cada registro.</li>
+                    <li><span class="highlight">@GeneratedValue(strategy = GenerationType.IDENTITY)</span>: O 'contador automático' do banco (Auto-Increment). O próprio banco cuida de gerar os números 1, 2, 3...</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. O REPOSITÓRIO JPA -->
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">2. O Repositório JPA: <span>O Almoxarife do Banco</span></h2>
+            <p>Você não precisa escrever consultas SQL gigantescas à mão. O <strong>JpaRepository</strong> resolve a comunicação com o banco de forma transparente.</p>
+            
+            <div class="two-column">
+                <div>
+                    <p>Pense nele como o <strong>Almoxarife</strong>. Você não precisa ir até o estoque (MySQL) buscar algo; você apenas pede ao almoxarife usando métodos como <code>findAll()</code> ou <code>save()</code> e ele traz o item pronto.</p>
+                    <p>Para criar esse almoxarife, só precisamos criar uma interface que herda (extends) do `JpaRepository`.</p>
+                </div>
+                <div>
+<pre>
+public interface JogoRepository extends JpaRepository<Jogo, Long> {
+    // Pronto! Não precisa escrever código dentro da interface.
+}</pre>
+                </div>
+            </div>
+
+            <div class="obs-box" style="margin-top: 15px;">
+                <p style="margin-bottom: 0;"><strong>Como Funciona:</strong> Nós passamos dois parâmetros para o `JpaRepository`: o tipo da Entidade (<code>Jogo</code>) e o tipo do ID da Entidade (<code>Long</code>). Com isso, o Spring já gera todos os métodos básicos de CRUD por debaixo dos panos!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. INJEÇÃO DE DEPENDÊNCIA -->
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">3. Injeção de Dependência (@Autowired): <span>O Ramal Direto</span></h2>
+            <p>Como a Recepcionista (nosso `@RestController`) conversa com o Almoxarife (o `@Repository`)?</p>
+            
+            <p>Em Java puro, faríamos algo como <code>JogoRepository repository = new JogoRepository();</code>. Mas no Spring, nós usamos a Injeção de Dependência.</p>
+            
+            <div class="obs-box" style="margin-top: 10px; border-left-color: var(--accent-blue);">
+                <p style="margin-bottom: 0;">O Spring cria um <strong>ramal de telefone direto</strong> com a anotação <span class="highlight">@Autowired</span>. Quando o Controller precisa do banco, o Spring já entrega a instância do repositório pronta para uso, sem precisarmos dar um <code>new</code>.</p>
+            </div>
+            
+            <pre>
+@RestController
+@RequestMapping("/jogos")
+public class JogoController {
+
+    @Autowired
+    private JogoRepository repository;
+    
+    // Métodos do CRUD...
+}</pre>
+        </div>
+    </section>
+
+    <!-- 4. O PRIMEIRO CRUD -->
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">4. Completando o <span>CRUD no Controller</span></h2>
+            <p>Agora vamos expandir a nossa rota <code>/jogos</code> para permitir criar, listar e deletar registros do banco de dados.</p>
+            
+            <div class="two-column">
+                <div>
+                    <ul>
+                        <li><span class="highlight">@GetMapping</span>: Para listar. Retorna o resultado do <code>repository.findAll()</code>.</li>
+                        <li><span class="highlight">@PostMapping</span>: Para cadastrar. Combinamos com <span class="highlight">@RequestBody</span> ("Abrindo o pacote JSON enviado pelo Front-End e convertendo em objeto Java"). Salvamos com <code>repository.save()</code>.</li>
+                        <li><span class="highlight">@DeleteMapping</span>: Para deletar. Usamos <span class="highlight">@PathVariable</span> ("Pegando o ID passado diretamente na URL, ex: `/jogos/3`"). Deletamos com <code>repository.deleteById()</code>.</li>
+                    </ul>
+                </div>
+                <div>
+<pre>
+@GetMapping
+public List<Jogo> listar() {
+    return repository.findAll();
+}
+
+@PostMapping
+public Jogo salvar(@RequestBody Jogo jogo) {
+    return repository.save(jogo);
+}
+
+@DeleteMapping("/{id}")
+public void deletar(@PathVariable Long id) {
+    repository.deleteById(id);
+}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXERCÍCIOS DE FIXAÇÃO -->
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">Mão na <span>Massa (Fixação)</span></h2>
+            <p>Hora de testar o conhecimento da aula! Resolva os exercícios abaixo.</p>
+
+            <div class="exercise-box">
+                <p><strong>Nível 1: O Crachá do Banco</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Qual anotação informamos em cima do atributo <code>id</code> da nossa entidade para garantir que o próprio banco de dados MySQL gere os números (1, 2, 3...) automaticamente (Auto-Increment)?</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Nível 2: Quem faz o trabalho pesado?</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Ao herdar de <code>JpaRepository&lt;Jogo, Long&gt;</code>, qual método já vem pronto para salvar ou atualizar um jogo no banco?<br><br>
+                ( ) <code>repository.insert()</code><br>
+                ( ) <code>repository.save()</code><br>
+                ( ) <code>repository.add()</code></p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Nível 3: Entendendo o Pacote</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Quando o Front-End envia os dados de um novo jogo via requisição POST, qual anotação usamos nos parâmetros do método no Controller para converter esse JSON recebido em um objeto Java pronto para ser salvo?</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Nível 4: A Rota Dinâmica</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Para deletar um jogo com ID específico acessando a rota <code>/jogos/5</code>, qual anotação captura o valor numérico <code>5</code> da URL e o envia para a variável no código Java?</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        /* ---------- REVELAÇÃO DOS SLIDES EM SCROLL ---------- */
+        document.addEventListener("DOMContentLoaded", function () {
+            const slides = document.querySelectorAll('.slide');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.15 }); // Revela o slide quando 15% dele está visível
+            
+            slides.forEach(slide => observer.observe(slide));
+        });
+    </script>
+</body>
+</html>
