@@ -31,6 +31,14 @@
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     }
 
+     #gabaritos {
+      width: min(45%, 510px);
+      background: #ffffff;
+      padding: 42px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
     h1 {
       margin: 0 0 28px;
       text-align: center;

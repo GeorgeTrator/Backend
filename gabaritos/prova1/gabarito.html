@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gabarito - Prova Back-end</title>
+  <style>
+      * {
+          box-sizing: border-box;
+      }
+
+      body {
+          margin: 0;
+          font-family: Arial, Helvetica, sans-serif;
+          background: #f3f4f6;
+          color: #222;
+          line-height: 1.7;
+      }
+
+      main {
+          width: min(95%, 1100px);
+          margin: 40px auto;
+          background: white;
+          padding: 40px;
+          border-radius: 12px;
+          box-shadow: 0 8px 20px rgba(0,0,0,.10);
+      }
+
+      a {
+          text-decoration: none;
+          color: #444;
+      }
+
+      a:hover {
+          text-decoration: underline;
+      }
+
+      h1 {
+          margin-top: 20px;
+      }
+
+      h2 {
+          margin-top: 35px;
+          border-bottom: 1px solid #ddd;
+          padding-bottom: 8px;
+      }
+
+      ul {
+          padding-left: 22px;
+      }
+
+      li {
+          margin-bottom: 8px;
+      }
+
+      pre {
+          background: #f7f7f7;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 16px;
+          overflow-x: auto;
+      }
+
+      code {
+          font-family: "Courier New", monospace;
+      }
+      
+      .passo {
+          margin-top: 30px;
+          padding: 20px 22px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+      }
+
+      .passo h3 {
+          margin-top: 0;
+      }
+      
+      table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 15px 0;
+      }
+      
+      table, th, td {
+          border: 1px solid #ddd;
+      }
+      
+      th, td {
+          padding: 10px;
+          text-align: left;
+      }
+      
+      th {
+          background-color: #f7f7f7;
+      }
+  </style>
+</head>
+<body>
+
+<main>
+
+<a href="index.html">← Voltar para a Lista de Exercícios</a>
+
+<h1>Gabarito da Prova</h1>
+<p>Confira abaixo o gabarito completo de todas as questões da prova.</p>
+
+<h2>Parte 1 — SQL / MySQL</h2>
+
+<div class="passo">
+  <h3>Questão 1</h3>
+  <pre><code>SELECT Espiao.nome_real, Agencia.nome_agencia
+FROM Espiao
+JOIN Agencia ON Espiao.id_agencia = Agencia.id_agencia;</code></pre>
+</div>
+
+<div class="passo">
+  <h3>Questão 2</h3>
+  <pre><code>SELECT Agencia.nome_agencia, Espiao.nome_espiao, Missao.nome_missao
+FROM Agencia
+LEFT JOIN Espiao ON Agencia.id_agencia = Espiao.id_agencia
+LEFT JOIN Missao ON Espiao.id_missao = Missao.id_missao;</code></pre>
+</div>
+
+<div class="passo">
+  <h3>Questão 3</h3>
+  <p>A consulta retorna os espiões pertencentes à agência com id_agencia = 3 (ABIN):</p>
+  <table>
+      <tr>
+          <th>nome_espiao</th>
+          <th>nome_real</th>
+      </tr>
+      <tr>
+          <td>Professor George</td>
+          <td>George Santos</td>
+      </tr>
+      <tr>
+          <td>Ronaldinho Gaúcho</td>
+          <td>Ismael Bert</td>
+      </tr>
+  </table>
+</div>
+
+<div class="passo">
+  <h3>Questão 4</h3>
+  <p>A consulta faz um INNER JOIN entre Missao e Espiao e agrupa pelo nome da missão, contando quantos espiões estão vinculados a cada uma:</p>
+  <table>
+      <tr>
+          <th>nome_missao</th>
+          <th>total_espioes</th>
+      </tr>
+      <tr>
+          <td>Operação Bolo de Aniversário</td>
+          <td>2</td>
+      </tr>
+      <tr>
+          <td>Operação Pombo-Correio 2.0</td>
+          <td>1</td>
+      </tr>
+      <tr>
+          <td>Operação Drone Zero</td>
+          <td>1</td>
+      </tr>
+  </table>
+  <p><em>(Nota: Os espiões Ismael Bert e Carol McLauren têm id_missao como NULL, pelo que não entram na contagem).</em></p>
+</div>
+
+<h2>Parte 2 — Java</h2>
+
+<div class="passo">
+  <h3>Questão 5</h3>
+  <p>Sugestão de resposta</p>
+  <pre><code>public static String emitirCredencial(String nomeReal, String nomeEspiao) {
+    return "Credencial emitida para " + nomeReal + " (codinome: " + nomeEspiao + ")";
+}</code></pre>
+</div>
+
+<div class="passo">
+  <h3>Questão 6</h3>
+  <p><strong>Corpo do método:</strong></p>
+  <pre><code>public static double calcularRiscoMedio(int[] niveis) {
+    double soma = 0;
+    for (int nivel : niveis) {
+        soma += nivel;
+    }
+    return soma / niveis.length;
+}</code></pre>
+  <p><strong>Valor final impresso:</strong> <code>48.333333333333336</code> (Soma = 435; 435 / 9 = 48.3333...).</p>
+</div>
+
+<div class="passo">
+  <h3>Questão 7</h3>
+  <p><strong>Saída impressa:</strong></p>
+  <pre><code>[15, 15, 35, 35, 55, 55, 75, 75, 95, 95]
+Soma total: 550</code></pre>
+  <p><strong>Justificação:</strong></p>
+  <ul>
+      <li>Nos índices pares (0, 2, 4, 6, 8), é somado 5 ao valor do elemento.</li>
+      <li>Nos índices ímpares (1, 3, 5, 7, 9), é subtraído 5 ao valor do elemento.</li>
+      <li>A soma total permanece 550, pois cada acréscimo de 5 num elemento é anulado pela subtração de 5 no elemento seguinte.</li>
+  </ul>
+</div>
+
+<div class="passo">
+  <h3>Questão 8</h3>
+  <p><strong>Saída impressa:</strong></p>
+  <pre><code>A1 b2 C3 d4 E5 
+Códigos alterados: 2</code></pre>
+</div>
+
+<h2>Parte 3 — JavaScript</h2>
+
+<div class="passo">
+  <h3>Questão 9</h3>
+  <p><strong>Conteúdo do arquivo script.js:</strong></p>
+  <pre><code>document.getElementById('form-cadastro').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const nomeReal = document.getElementById('nome-real').value;
+    const nomeEspiao = document.getElementById('nome-espiao').value;
+
+    const dadosEspiao = {
+        nomeReal: nomeReal,
+        nomeEspiao: nomeEspiao
+    };
+
+    console.log(dadosEspiao);
+});</code></pre>
+</div>
+
+<div class="passo">
+  <h3>Questão 10</h3>
+  <pre><code>async function verificarMissao(id) {
+    // Usando URL de exemplo
+    const response = await fetch("http://localhost:8080/missoes/" + id);
+    const data = await response.json();
+    return data;
+}</code></pre>
+</div>
+
+<h2>Parte 4 — Protocolo HTTP, Cliente-Servidor e URL</h2>
+
+<div class="passo">
+  <h3>Questão 11</h3>
+  <p><strong>Resposta: (b)</strong></p>
+  <p><em>(A carga útil / payload da requisição ou resposta, usada por métodos como POST e PUT para transportar dados estruturados, como um objeto JSON).</em></p>
+</div>
+
+<div class="passo">
+  <h3>Questão 12</h3>
+  <ol>
+      <li><strong>Front-end (JavaScript / Navegador):</strong> O usuário acessa a tela "Meus dados". O JavaScript dispara uma requisição HTTP assíncrona (por exemplo, via fetch) para a API do back-end.</li>
+      <li><strong>Back-end (Java / Spring Boot):</strong> O controlador (Controller) recebe a requisição HTTP, valida-a e chama a camada de serviço/repositório, que executa uma consulta no banco de dados MySQL.</li>
+      <li><strong>Banco de Dados (MySQL):</strong> Processa a instrução SQL na tabela Espiao, recupera o registro correspondente e devolve os dados brutos ao back-end.</li>
+      <li><strong>Retorno do Back-end:</strong> O Spring Boot recebe os dados do banco, mapeia-os para um objeto/DTO, serializa-o no formato JSON e envia-o de volta na resposta HTTP com código de status 200 OK.</li>
+      <li><strong>Exibição no Front-end:</strong> O JavaScript recebe a resposta JSON e atualiza dinamicamente o DOM (HTML) da tela para apresentar as informações do espião.</li>
+  </ol>
+</div>
+
+<h2>Parte 5 — Spring Boot</h2>
+
+<div class="passo">
+  <h3>Questão 13</h3>
+  <ul>
+      <li><strong>Para que serve:</strong> O arquivo application.properties é o arquivo central de configuração do Spring Boot. Serve para definir parâmetros de ambiente da aplicação, como as credenciais e URL do banco de dados, porta do servidor web, níveis de log, entre outros.</li>
+      <li><strong>Se a senha estiver incorreta:</strong> A aplicação falhará ao tentar conectar no banco de dados MySQL, lançando uma exceção de autenticação (ex.: Access denied for user). Como consequência, qualquer requisição que dependa de dados do banco falhará e retornará um erro ao cliente (ou a aplicação não conseguirá inicializar se houver validação na inicialização).</li>
+  </ul>
+</div>
+
+<div class="passo">
+  <h3>Questão 14</h3>
+  <ul>
+      <li><strong>(1)</strong> @RestController</li>
+      <li><strong>(2)</strong> @GetMapping</li>
+  </ul>
+  <p><strong>Explicação:</strong></p>
+  <ul>
+      <li><strong>@RestController:</strong> Marca a classe como um controlador REST do Spring, indicando que os valores retornados pelos seus métodos devem ser serializados diretamente no corpo da resposta HTTP (geralmente em formato JSON).</li>
+      <li><strong>@GetMapping:</strong> Mapeia requisições HTTP do tipo GET no endpoint especificado (/missoes) para execução do método listarMissoes().</li>
+  </ul>
+</div>
+
+</main>
+
+</body>
+</html>
