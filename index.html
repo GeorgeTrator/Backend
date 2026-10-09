@@ -5,65 +5,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lista de Exercícios</title>
   <link rel="stylesheet" href="style.css">
-
 </head>
-<body>  
-    <main>
-      
-    <div id="divExe">
-      <h1 >Lista de Exercícios</h1>
-      <a class="class-link" href="exercises/ex01/ex01.html">
-        <strong>Exercício 01 — Revisão Diagrama ER</strong>
-        <span>Sistema de Controle de Estoque</span>
+<body>
+  <main>
+    <div id="conteudo"></div>
+  </main>
+
+  <script>
+    const conteudo = document.querySelector('#conteudo');
+
+    const menu = `
+      <h1>Material da Disciplina</h1>
+      <a class="class-link" href="#" onclick="mostrar('exercicios'); return false;">
+        <strong>Lista de Exercícios</strong>
+        <span>Exercícios práticos de ER, SQL e conexão Front-end/Back-end.</span>
       </a>
-      <a class="class-link" href="exercises/ex02/ex02.html">
-        <strong>Exercício 02 - Revisão SQL</strong>
-        <span>Buscas para Sistema de Controle de Estoque</span>
+      <a class="class-link" href="#" onclick="mostrar('aulas'); return false;">
+        <strong>Lista de Aulas</strong>
+        <span>Cliente-servidor, Spring Boot e Spring Data JPA.</span>
       </a>
-      <a class="class-link" href="exercises/ex03/ex03.html">
-        <strong>Exercício 03 - Introdução ao BackEnd</strong>
-        <span>Vamos realizar nossa primeira conexão do BD MySql com uma aplicação Java de testes</span>
+      <a class="class-link" href="#" onclick="mostrar('gabaritos'); return false;">
+        <strong>Gabaritos de Prova</strong>
+        <span>Respostas e explicações das provas.</span>
       </a>
+    `;
+
+    const botaoVoltar = `
+      <a class="class-link" href="#" onclick="voltar(); return false;">
+        <strong>← Voltar ao menu</strong>
+      </a>
+    `;
+
+    const topicos = {
+      exercicios: `
+        <h1>Lista de Exercícios</h1>
+        <a class="class-link" href="exercises/ex01/ex01.html">
+          <strong>Exercício 01 — Revisão Diagrama ER</strong>
+          <span>Sistema de Controle de Estoque</span>
+        </a>
+        <a class="class-link" href="exercises/ex02/ex02.html">
+          <strong>Exercício 02 - Revisão SQL</strong>
+          <span>Buscas para Sistema de Controle de Estoque</span>
+        </a>
+        <a class="class-link" href="exercises/ex03/ex03.html">
+          <strong>Exercício 03 - Introdução ao BackEnd</strong>
+          <span>Vamos realizar nossa primeira conexão do BD MySql com uma aplicação Java de testes</span>
+        </a>
         <a class="class-link" href="exercises/ex04/index.html">
-        <strong>Exercício 04 - Conectando FrontEnd com BackEnd</strong>
-        <span>Vamos tentar (e falhar) em estabelecer uma conexão com nosso Backend na porta local 8080</span>
-      </a>
-      <a class="class-link" href="exercises/ex05/index.html">
-          <strong>Exercício 05 - Conectando FrontEnd com BackEnd parte 2</strong> 
+          <strong>Exercício 04 - Conectando FrontEnd com BackEnd</strong>
+          <span>Vamos tentar (e falhar) em estabelecer uma conexão com nosso Backend na porta local 8080</span>
+        </a>
+        <a class="class-link" href="exercises/ex05/index.html">
+          <strong>Exercício 05 - Conectando FrontEnd com BackEnd parte 2</strong>
           <span>Vamos enviar uma mensagem ao FrontEnd através do Java</span>
-      </a>
-    </div>
-        <div id="theory">
-            <h1>Lista de aulas</h1>
-            <a class="class-link" href="aulas/aula_1/index.html" target="_blank">
-              <strong>Introdução BackEnd</strong>
-              <span>Vamos ver os mecanismos básicos da lógica Cliente-Servidor, como requisições HTTP,
-                    métodos, códigos de retorno.
-              </span>
-            </a>
-            <a class="class-link" href="aulas/aula_2/index.html" target="_blank">
-              <strong>Introdução ao Spring Boot</strong>
-              <span>Vamos aprender a instalar o framework Spring Broot de maneira fácil e rápida
-                    por meio do Spring Initializr e, na sequência, aprender a configurá-lo, dar
-                    acesso ao banco e estabelecer contato com o FrontEnd. 
-              </span>
-            </a>
-            <a class="class-link" href="aulas/aula_3/index.html" target="_blank">
-              <strong>Como o Spring se comunica com o BD</strong>
-              <span>Vamos aprender sobre o Spring DATA JPA, que é quem estabelece a nossa
-                comunicação com o BD de maneira prática e rápida, abstraindo as complexidades
-                da operação.
-              </span>
-            </a>          
-        </div>
-        
-        <div id="gabaritos">
-            <h1>Gabaritos de Prova</h1>
-            <a class="class-link" href="gabaritos/prova1/gabarito.html" target="_blank">
-              <strong>Gabarito da Prova de Back-end</strong>
-              <span>Confira as respostas e explicações de todas as questões da prova (SQL, Java, JavaScript, HTTP e Spring Boot).</span>
-            </a>
-        </div>
-    </main>
+        </a>
+      `,
+      aulas: `
+        <h1>Lista de aulas</h1>
+        <a class="class-link" href="aulas/aula_1/index.html" target="_blank">
+          <strong>Introdução BackEnd</strong>
+          <span>Vamos ver os mecanismos básicos da lógica Cliente-Servidor, como requisições HTTP, métodos, códigos de retorno.</span>
+        </a>
+        <a class="class-link" href="aulas/aula_2/index.html" target="_blank">
+          <strong>Introdução ao Spring Boot</strong>
+          <span>Vamos aprender a instalar o framework Spring Boot de maneira fácil e rápida por meio do Spring Initializr e, na sequência, aprender a configurá-lo, dar acesso ao banco e estabelecer contato com o FrontEnd.</span>
+        </a>
+        <a class="class-link" href="aulas/aula_3/index.html" target="_blank">
+          <strong>Como o Spring se comunica com o BD</strong>
+          <span>Vamos aprender sobre o Spring DATA JPA, que é quem estabelece a nossa comunicação com o BD de maneira prática e rápida, abstraindo as complexidades da operação.</span>
+        </a>
+        <a class="class-link" href="aulas/aula_4/index.html" target="_blank">
+          <strong>Comunicação completa</strong>
+          <span>Vamos montar uma pequena aplicação full stack e entender cada etapa de sua comunicação</span>
+        </a>
+      `,
+      gabaritos: `
+        <h1>Gabaritos de Prova</h1>
+        <a class="class-link" href="gabaritos/prova1/gabarito.html" target="_blank">
+          <strong>Gabarito da Prova de Back-end</strong>
+          <span>Confira as respostas e explicações de todas as questões da prova (SQL, Java, JavaScript, HTTP e Spring Boot).</span>
+        </a>
+      `
+    };
+
+    function mostrar(nome) {
+      conteudo.innerHTML = topicos[nome] + botaoVoltar;
+    }
+
+    function voltar() {
+      conteudo.innerHTML = menu;
+    }
+
+    voltar();
+  </script>
 </body>
 </html>

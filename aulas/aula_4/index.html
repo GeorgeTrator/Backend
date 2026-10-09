@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula: Do Formulário ao MySQL com Spring Boot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--bg-main:#00204E;--bg-alt:#003060;--bg-dark:#1a1a1a;--bg-card:rgba(255,255,255,0.05);--text-light:#f5f5f5;--text-muted:#daffde;--text-highlight:#deff9a;--accent-blue:#00A8E8;--border-card:6px solid #00A8E8;--border-code:1px solid #00A8E8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;background-color:var(--bg-main);}
+body{color:var(--text-light);font-family:'Urbanist',sans-serif;overflow-x:hidden;}
+a{text-decoration:none;transition:transform 1.0s ease;display:inline-block;color:var(--accent-blue);}
+a:hover{transform:scale(1.05);}
+.slide{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:60px;position:relative;border-bottom:1px solid rgba(255,255,255,0.1);opacity:0;transform:translateY(50px);transition:opacity 0.8s ease,transform 0.8s ease;}
+.slide.visible{opacity:1;transform:translateY(0);}
+.slide-alt{background-color:var(--bg-alt);}
+.slide-title{font-size:48px;font-weight:700;color:var(--accent-blue);margin-bottom:30px;text-transform:uppercase;letter-spacing:2px;}
+.slide-title span{color:var(--text-light);}
+.content-area{width:100%;max-width:1200px;margin:0 auto;}
+.two-column{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;}
+p,li{font-size:22px;line-height:1.6;color:var(--text-muted);margin-bottom:20px;}
+strong{color:var(--accent-blue);}
+.highlight{color:var(--text-highlight);font-weight:700;}
+h3{font-size:30px;margin-bottom:20px;color:var(--text-light);}
+ul{list-style:none;margin-bottom:20px;}
+ul li::before{content:"•";color:var(--accent-blue);font-weight:bold;display:inline-block;width:1em;margin-left:-1em;}
+code{background:var(--bg-dark);padding:4px 8px;border-radius:4px;color:var(--text-highlight);font-family:'Courier New',Courier,monospace;}
+pre{background:var(--bg-dark);padding:25px;border-radius:12px;border:var(--border-code);overflow-x:auto;font-size:18px;color:var(--text-light);font-family:'Courier New',Courier,monospace;margin-top:15px;margin-bottom:15px;}
+.exercise-box{background:var(--bg-card);border-left:var(--border-card);padding:25px;margin-top:25px;border-radius:0 12px 12px 0;}
+.obs-box{background:rgba(222,255,154,0.05);border-left:6px solid var(--text-highlight);padding:25px;margin-top:35px;border-radius:0 12px 12px 0;}
+.bg-shape{position:absolute;top:10%;right:5%;width:300px;height:300px;background:radial-gradient(circle,rgba(0,168,232,0.1) 0%,transparent 70%);z-index:0;pointer-events:none;}
+.scroll-indicator{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);font-size:18px;color:var(--text-highlight);animation:bounce 2s infinite;}
+@keyframes bounce{0%,20%,50%,80%,100%{transform:translate(-50%,0);}40%{transform:translate(-50%,-10px);}60%{transform:translate(-50%,-5px);}}
+@media (max-width:900px){.slide{padding:40px 25px;}.slide-title{font-size:34px;}.two-column{grid-template-columns:1fr;gap:25px;}p,li{font-size:19px;}}
+</style>
+</head>
+<body>
+
+<section class="slide title-slide visible">
+<div class="bg-shape"></div>
+<div class="content-area" style="text-align:center;">
+<h1 class="slide-title" style="font-size:70px;">Do Formulário ao MySQL: <span>Nossa Primeira Aplicação Completa</span></h1>
+<p>Front-end, Spring Boot e Banco de Dados conversando entre si. Vamos construir tudo do zero e entender cada peça.</p>
+</div>
+<div class="scroll-indicator">Role para baixo para começar <i class="fa-solid fa-chevron-down"></i></div>
+</section>
+
+<!-- 0. VISÃO GERAL -->
+<section class="slide slide-alt">
+<div class="content-area">
+<h2 class="slide-title">O Plano: <span>Um Restaurante de Espiões</span></h2>
+<p>Imagine um restaurante. O <strong>cliente</strong> (navegador) faz o pedido, o <strong>garçom</strong> (Spring Boot) leva até a cozinha e o <strong>estoque</strong> (MySQL) guarda os ingredientes. O cliente digita uma agência (<code>CIA</code>, <code>MOSSAD</code> ou <code>ABIN</code>) e recebe a lista de espiões dela.</p>
+<div class="two-column">
+<div>
+<ul>
+<li><span class="highlight">Model</span>: os "moldes" dos dados (<code>Agencia</code>, <code>Espiao</code>).</li>
+<li><span class="highlight">View</span>: o que o usuário vê. Aqui é o <code>index.html</code>, que fica em outra pasta.</li>
+<li><span class="highlight">Controller</span>: o garçom, que recebe pedidos e responde.</li>
+<li><span class="highlight">Repository</span>: o estoquista, que fala com o banco. </li>
+</ul>
+</div>
+<div>
+<h2>Estrutura de pastas</h2>
+<pre>
+agencia/
+├─ back-end/   (projeto Spring)
+│  ├─ pom.xml (Project Object Model)
+│  └─ src/main/
+│     ├─ java/com/example/agencia/
+│     │  ├─ AgenciaApplication.java
+│     │  ├─ controller/EspiaoController.java
+│     │  ├─ model/Agencia.java
+│     │  │       Espiao.java
+│     │  └─ repository/AgenciaRepository.java
+│     │          EspiaoRepository.java
+│     └─ resources/application.properties
+├─ database/schema.sql
+└─ front-end/index.html</pre>
+></div>
+</div>
+<div class="obs-box"><p style="margin-bottom:0;">
+<strong><span class="highlight">pom.xml =</span></strong> Arquivo que diz ao Maven (descrito em outro slide) quais dependências (bibliotecas), versões etc. baixar e como construir o projeto.<br>
+<strong>src/main/java/ =</strong> Onde fica todo o código-fonte em Java da aplicação.<br>
+<strong><span class="highlight">AgenciaApplication.java =</span></strong> Classe principal que inicializa a aplicação Spring Boot.<br>
+<strong>controller/ =</strong> Contém os controladores que recebem as requisições HTTP.<br>
+<strong><span class="highlight">model/ =</span></strong> Define as classes/entidades que representam as tabelas e dados do sistema.<br>
+<strong>repository/ =</strong> Faz a comunicação e interação direta com o banco de dados.<br>
+<strong><span class="highlight">resources/application.properties =</span></strong> Arquivo de configurações do sistema, como conexão com o banco.<br>
+<strong>database/schema.sql =</strong> Script SQL responsável por criar o banco de dados e as tabelas iniciais.<br>
+<strong><span class="highlight">front-end/index.html =</span></strong> Interface visual e ponto de entrada da aplicação para o usuário.</p></div>
+</div>
+</section>
+
+<!-- 1. BANCO -->
+<section class="slide">
+<div class="content-area">
+<h2 class="slide-title">1. O Banco de Dados: <span>O Estoque e o Dump SQL</span></h2>
+<p>Um <strong>banco de dados relacional</strong> é um conjunto de tabelas (como planilhas) ligadas entre si. O arquivo <code>database/schema.sql</code> é um <span class="highlight">dump</span> (despejo): um roteiro em SQL que, ao ser executado, cria o banco, as tabelas e os dados iniciais. Quem receber o arquivo reconstrói o mesmo banco.</p>
+<p>No VS Code, com a extensão <strong>MySQL Database Client</strong>, conecte no seu servidor MySQL, abra o <code>schema.sql</code> e execute o arquivo inteiro (Run All).</p>
+<div class="two-column">
+<div>
+<pre>
+CREATE DATABASE IF NOT EXISTS agencias_db;
+USE agencias_db;
+
+CREATE TABLE Agencia (
+ id_agencia INT AUTO_INCREMENT PRIMARY KEY,
+ nome_agencia VARCHAR(100) NOT NULL
+);
+CREATE TABLE Missao (
+ id_missao INT AUTO_INCREMENT PRIMARY KEY,
+ nome_missao VARCHAR(150) NOT NULL UNIQUE,
+ descricao TEXT
+);
+CREATE TABLE Espiao (
+ id_espiao INT AUTO_INCREMENT PRIMARY KEY,
+ nome_real VARCHAR(150) NOT NULL,
+ nome_espiao VARCHAR(100) DEFAULT '007',
+ descricao TEXT,
+ id_agencia INT NOT NULL,
+ id_missao INT,
+ FOREIGN KEY (id_agencia)
+   REFERENCES Agencia(id_agencia),
+ FOREIGN KEY (id_missao)
+   REFERENCES Missao(id_missao)
+);</pre>
+</div>
+<div>
+<ul>
+<li><span class="highlight">PRIMARY KEY</span>: o "CPF" da linha, único.</li>
+<li><span class="highlight">AUTO_INCREMENT</span>: o banco numera sozinho (1, 2, 3...).</li>
+<li><span class="highlight">NOT NULL</span>: não pode ficar vazio. <span class="highlight">UNIQUE</span>: não pode repetir. <span class="highlight">DEFAULT</span>: valor usado se ninguém informar (todo espião sem nome fica "007").</li>
+<li><span class="highlight">FOREIGN KEY</span> (chave estrangeira): o "crachá de outra tabela". <code>Espiao.id_agencia</code> aponta para uma linha de <code>Agencia</code>. O banco recusa um espião de agência inexistente.</li>
+<li>A <code>USE agencias_db;</code> escolhe o banco padrão da sessão. Depois vêm os <code>INSERT INTO</code> com CIA, MOSSAD, ABIN, as missões e 5 espiões de exemplo.</li>
+</ul>
+</div>
+</div>
+<div class="obs-box"><p style="margin-bottom:0;">Teste: <code>SELECT * FROM Agencia;</code> deve mostrar CIA, MOSSAD e ABIN. Note que o espião guarda só o <strong>número</strong> da agência, não o nome. Isso é importante mais à frente.</p></div>
+</div>
+</section>
+
+<!-- 2. INITIALIZR -->
+<section class="slide slide-alt">
+<div class="content-area">
+<h2 class="slide-title">2. Spring Initializr: <span>A Caixa de Montar</span></h2>
+<p>Um <strong>framework</strong> é um "kit de montar": em vez de escrever tudo, você recebe peças prontas. O <strong>Spring Boot</strong> é o kit de Java para criar aplicações web. O <strong>Spring Initializr</strong> (<code>start.spring.io</code>) é o site que monta a caixa inicial para você.</p>
+<div class="two-column">
+<div>
+<ul>
+<li><span class="highlight">Project: Maven</span>: ferramenta que baixa as bibliotecas e compila. Ela lê o <code>pom.xml</code>, a "lista de compras" do projeto.</li>
+<li><span class="highlight">Language: Java</span>. <span class="highlight">Packaging: Jar</span> (o programa empacotado).</li>
+<li><span class="highlight">Spring Boot</span>: versão estável (sem SNAPSHOT, M ou RC).</li>
+<li><span class="highlight">Group:</span> <code>com.example</code>. <span class="highlight">Artifact:</span> <code>agencia</code>. Juntos formam o pacote <code>com.example.agencia</code>.</li>
+<li><span class="highlight">Java:</span> 21 (versão LTS, suporte longo).</li>
+</ul>
+</div>
+<div>
+<p><strong>Dependências (bibliotecas):</strong></p>
+<ul>
+<li><span class="highlight">Spring Web</span>: traz o <strong>Tomcat</strong> (servidor web embutido) e as ferramentas para receber pedidos HTTP e responder em JSON.</li>
+<li><span class="highlight">Spring Data JPA</span>: traz o <strong>Hibernate</strong>, que traduz objetos Java para SQL.</li>
+<li><span class="highlight">MySQL Driver</span>: o "tradutor" que sabe falar o idioma do MySQL.</li>
+</ul>
+</div>
+</div>
+<div class="obs-box"><p style="margin-bottom:0;">Clique em <strong>Generate</strong>, extraia o .zip e coloque o <em>conteúdo</em> dentro de <code>back-end/</code>, de modo que o <code>pom.xml</code> fique direto lá, sem pasta extra no meio.</p></div>
+</div>
+</section>
+
+<!-- 3. PROPERTIES -->
+<section class="slide">
+<div class="content-area">
+<h2 class="slide-title">3. application.properties: <span>O Cartão de Visitas do Banco</span></h2>
+<p>Para o Java achar o MySQL, ele precisa de endereço, usuário e senha. Isso fica em <code>src/main/resources/application.properties</code>, um arquivo de <strong>configuração</strong> no formato <code>chave=valor</code>.</p>
+<pre>
+spring.datasource.url=jdbc:mysql://localhost:3306/agencias_db
+spring.datasource.username=root
+spring.datasource.password=SUA_SENHA
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=true</pre>
+<ul>
+<li><span class="highlight">url</span>: <code>jdbc:mysql</code> (protocolo), <code>localhost</code> (este computador), <code>3306</code> (a "porta" do MySQL, como o número de uma janela de atendimento), <code>agencias_db</code> (qual banco). <span class="highlight">JDBC</span> é o padrão do Java para falar com bancos.</li>
+<li><span class="highlight">username/password</span>: valor direto, <strong>sem aspas</strong> e sem espaço sobrando no fim.</li>
+<li><span class="highlight">ddl-auto=none</span>: "Hibernate, não mexa nas tabelas, eu já criei no dump".</li>
+<li><span class="highlight">show-sql=true</span>: imprime no terminal cada SQL que o Spring executa. Ótimo para aprender!</li>
+</ul>
+<div class="obs-box"><p style="margin-bottom:0;">Esqueceu a senha? O MySQL guarda só um <em>hash</em> (embaralhado sem volta). Crie um usuário novo: <code>CREATE USER 'agencias_user'@'localhost' IDENTIFIED BY 'senha';</code> e <code>GRANT ALL PRIVILEGES ON agencias_db.* TO 'agencias_user'@'localhost';</code></p></div>
+</div>
+</section>
+
+<!-- 4. SPRING APPLICATION -->
+<section class="slide slide-alt">
+<div class="content-area">
+<h2 class="slide-title">4. AgenciaApplication: <span>O Botão de Ligar</span></h2>
+<pre>
+package com.example.agencia;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class AgenciaApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(AgenciaApplication.class, args);
+    }
+}</pre>
+<ul>
+<li><span class="highlight">package</span>: o endereço (pasta) da classe.</li>
+<li><span class="highlight">import</span>: "vou usar a ferramenta tal, que mora em tal pacote".</li>
+<li><span class="highlight">main</span>: o ponto de partida de todo programa Java. É o botão de ligar.</li>
+<li><span class="highlight">SpringApplication.run(...)</span>: acorda o Spring. Ele escaneia as subpastas, acha suas classes, conecta no MySQL e sobe o Tomcat na porta <strong>8080</strong>.</li>
+<li><span class="highlight">@SpringBootApplication</span>: etiqueta que significa "esta é a classe principal; comece a procurar aqui".</li>
+</ul>
+<div class="obs-box"><p style="margin-bottom:0;"><strong>Como rodar:</strong> botão <em>Run</em> acima do <code>main</code> no VS Code (precisa do Extension Pack for Java) ou <code>.\mvnw spring-boot:run</code> dentro de <code>back-end/</code>. Sucesso = <code>Started AgenciaApplication in X seconds</code>. Para parar, clique no quadrado vermelho.</p></div>
+</div>
+</section>
+
+<!-- 5. MODEL -->
+<section class="slide">
+<div class="content-area">
+<h2 class="slide-title">5. Model: <span>O Molde da Tabela</span></h2>
+<p>Uma classe Java é uma "planta de casa". Uma <strong>Entity</strong> é uma classe cujos objetos representam <em>linhas</em> de uma tabela. Cada atributo vira uma coluna. Isso se chama, na Computação, <span class="highlight">ORM</span> (Mapeamento Objeto-Relacional): ligar o mundo dos objetos ao mundo das tabelas.</p>
+<div class="two-column">
+<div>
+<pre>
+@Entity
+@Table(name = "Espiao")
+public class Espiao {
+  @Id
+  @GeneratedValue(strategy =
+     GenerationType.IDENTITY)
+  @Column(name = "id_espiao")
+  private Integer id;
+
+  @Column(name = "nome_real")
+  private String nomeReal;
+
+  @Column(name = "nome_espiao")
+  private String nomeEspiao;
+
+  @Column(name = "descricao")
+  private String descricao;
+
+  // id_agencia é só o NÚMERO da chave
+  // estrangeira, não a agência em si.
+  @Column(name = "id_agencia")
+  private Integer idAgencia;
+
+  // getters...
+}</pre>
+</div>
+<div>
+<ul>
+<li><span class="highlight">@Entity</span>: "esta classe é uma tabela". Sem ela o JPA ignora a classe.</li>
+<li><span class="highlight">@Table(name=...)</span>: nome real da tabela no banco.</li>
+<li><span class="highlight">@Id</span>: o campo que é a chave primária.</li>
+<li><span class="highlight">@GeneratedValue(IDENTITY)</span>: o banco gera o número (AUTO_INCREMENT).</li>
+<li><span class="highlight">@Column(name=...)</span>: liga o atributo à coluna. Java usa <code>nomeReal</code> (camelCase), o banco usa <code>nome_real</code>.</li>
+<li><span class="highlight">private</span>: só a própria classe mexe direto. <span class="highlight">Getters</span> são as "janelinhas" de leitura e o Jackson, que gera o JSON, precisa deles.</li>
+</ul>
+</div>
+</div>
+<div class="obs-box"><p style="margin-bottom:0;"><code>Agencia.java</code> é igual, com duas colunas: <code>id</code> (<code>id_agencia</code>) e <code>nomeAgencia</code> (<code>nome_agencia</code>). Deixamos <code>id_missao</code> de fora de propósito: não vamos precisar nesta consulta.</p></div>
+</div>
+</section>
+
+<!-- 6. REPOSITORY -->
+<section class="slide slide-alt">
+<div class="content-area">
+<h2 class="slide-title">6. Repository: <span>O Estoquista (e o SQL escondido)</span></h2>
+<pre>
+public interface AgenciaRepository extends JpaRepository&lt;Agencia, Integer&gt; {
+    // SELECT * FROM Agencia WHERE nome_agencia = ?
+    Agencia findByNomeAgencia(String nomeAgencia);
+}
+
+public interface EspiaoRepository extends JpaRepository&lt;Espiao, Integer&gt; {
+    // SELECT * FROM Espiao WHERE id_agencia = ?
+    List&lt;Espiao&gt; findByIdAgencia(Integer idAgencia);
+}</pre>
+<ul>
+<li><span class="highlight">interface</span>: só um contrato ("o que fazer"), sem o "como". O Spring escreve a implementação sozinho enquanto o programa liga.</li>
+<li><span class="highlight">extends JpaRepository</span>: herda de graça <code>findAll()</code> (<code>SELECT * FROM Espiao</code>), <code>findById(1)</code> (<code>... WHERE id_espiao = 1</code>), <code>save()</code> (<code>INSERT</code> ou <code>UPDATE</code>), <code>deleteById()</code> (<code>DELETE</code>) e <code>count()</code>.</li>
+<li><span class="highlight">&lt;Agencia, Integer&gt;</span>: <em>generics</em>, dois "espaços em branco" a preencher: 1º o tipo da entidade, 2º o tipo da chave primária. A <code>JpaRepository</code> pede exatamente dois.</li>
+<li><span class="highlight">findBy + NomeDoCampo</span>: método derivado. O Spring lê o nome do método e monta o SQL. O nome é o do <strong>campo Java</strong> (<code>nomeAgencia</code>), não o da coluna. Se errar, a aplicação nem liga.</li>
+<li><span class="highlight">List&lt;Espiao&gt;</span>: vários espiões podem ter a mesma agência, por isso a lista. Já o nome da agência é único, então volta um só objeto (ou <code>null</code>).</li>
+</ul>
+<div class="obs-box"><p style="margin-bottom:0;"><strong>Na prática:</strong> o Hibernate gera algo como <code>select e1_0.id_espiao, e1_0.nome_real ... from Espiao e1_0 where e1_0.id_agencia=?</code> e usa um <code>PreparedStatement</code> (o <code>?</code> recebe o valor com segurança, evitando <em>SQL Injection</em>). Confira no terminal graças ao <code>show-sql</code>: as linhas começam com <code>Hibernate:</code>.</p></div>
+</div>
+</section>
+
+<!-- 7. CONTROLLER -->
+<section class="slide">
+<div class="content-area">
+<h2 class="slide-title">7. Controller: <span>O Garçom</span></h2>
+<pre>
+@RestController
+@CrossOrigin
+public class EspiaoController {
+  private final AgenciaRepository agenciaRepository;
+  private final EspiaoRepository espiaoRepository;
+
+  public EspiaoController(AgenciaRepository a, EspiaoRepository e) {
+    this.agenciaRepository = a;
+    this.espiaoRepository = e;
+  }
+
+  @GetMapping("/espioes")
+  public ResponseEntity&lt;List&lt;Espiao&gt;&gt; buscarPorAgencia(
+        @RequestParam String agencia) {
+    // SELECT * FROM Agencia WHERE nome_agencia = ?
+    Agencia ag = agenciaRepository
+        .findByNomeAgencia(agencia.toUpperCase());
+    if (ag == null) {
+      return ResponseEntity.notFound().build();
+    }
+    // SELECT * FROM Espiao WHERE id_agencia = ?
+    List&lt;Espiao&gt; lista = espiaoRepository
+        .findByIdAgencia(ag.getId());
+    return ResponseEntity.ok(lista);
+  }
+}</pre>
+<ul>
+<li><span class="highlight">@RestController</span>: "esta classe atende pedidos HTTP e responde com dados (JSON), não com páginas".</li>
+<li><span class="highlight">@CrossOrigin</span>: o navegador, por segurança (<strong>CORS</strong>), bloqueia uma página de uma "origem" de chamar outra origem. Essa etiqueta faz o Java responder "pode deixar, eu autorizo".</li>
+<li><span class="highlight">Construtor com os repositories</span>: <strong>injeção de dependência</strong>. Você não dá <code>new</code>: o Spring entrega os objetos prontos, como um "ramal direto" com o estoquista.</li>
+<li><span class="highlight">@GetMapping("/espioes")</span>: "pedidos GET para <code>/espioes</code> vêm para este método".</li>
+<li><span class="highlight">@RequestParam</span>: pega o <code>?agencia=CIA</code> da URL.</li>
+<li><span class="highlight">ResponseEntity</span>: a resposta HTTP completa (status + corpo). <code>notFound().build()</code> = status <strong>404</strong> sem corpo. <code>ok(lista)</code> = status <strong>200</strong> com a lista, que o Jackson converte em JSON.</li>
+</ul>
+</div>
+<div class="obs-box">Há um <strong>custo</strong> em realizar a operação desse jeito: estamos fazendo duas consultas no Banco de Dados (é mais lento).</div>
+</section>
+
+<!-- 8. SIMPLIFICAÇÃO / JOIN -->
+<section class="slide slide-alt">
+<div class="content-area">
+<h2 class="slide-title">8. Atalho Consciente: <span>O Jeito Certo Seria o JOIN</span></h2>
+<p>No <code>Espiao</code>, usamos <code>Integer idAgencia</code>. O jeito <strong>correto</strong> é declarar que cada espião <em>tem uma</em> <code>Agencia</code> (objeto), usando <code>@ManyToOne</code> ("muitos espiões para uma agência") e <code>@JoinColumn</code> ("a chave estrangeira é esta coluna"):</p>
+<div class="two-column">
+<div>
+<pre>
+@ManyToOne
+@JoinColumn(name = "id_agencia")
+private Agencia agencia;
+
+// no repository:
+List&lt;Espiao&gt; findByAgenciaNomeAgencia(
+        String nome);</pre>
+</div>
+<div>
+<pre>
+-- Uma consulta só, com JOIN:
+SELECT e.*
+FROM Espiao e
+JOIN Agencia a
+  ON e.id_agencia = a.id_agencia
+WHERE a.nome_agencia = 'CIA';</pre>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 9. INDEX.HTML -->
+<section class="slide">
+<div class="content-area">
+<h2 class="slide-title">9. index.html: <span>A Vitrine</span></h2>
+<pre>
+&lt;form method="GET"&gt;
+  &lt;input type="text" name="agencia"&gt;
+  &lt;button type="submit"&gt;Buscar&lt;/button&gt;
+&lt;/form&gt;
+&lt;p id="resultado"&gt;&lt;/p&gt;
+
+&lt;script&gt;
+const form = document.querySelector('form');
+const resultado = document.querySelector('#resultado');
+
+async function buscar(event) {
+  event.preventDefault();
+  const agencia = form.agencia.value;
+  const resposta = await fetch(
+    `http://localhost:8080/espioes?agencia=${encodeURIComponent(agencia)}`);
+  if (!resposta.ok) { resultado.textContent = 'Agência não encontrada.'; return; }
+  const espioes = await resposta.json();
+  let texto = '';
+  for (const e of espioes) {
+    texto += `${e.nomeEspiao} (${e.nomeReal}): ${e.descricao}\n`;
+  }
+  resultado.textContent = texto;
+}
+form.addEventListener('submit', buscar);
+&lt;/script&gt;</pre>
+<ul>
+<li><span class="highlight">addEventListener('submit', buscar)</span>: "quando o formulário for enviado, chame <code>buscar</code>". Sem parênteses: entregamos a função para o navegador chamar depois.</li>
+<li><span class="highlight">preventDefault()</span>: o submit normal recarregaria a página e perderíamos a resposta.</li>
+<li><span class="highlight">async / await</span>: a resposta demora (rede + banco). <code>await</code> pausa só esta função até chegar, sem travar a página.</li>
+<li><span class="highlight">fetch</span>: o navegador faz um pedido HTTP. <span class="highlight">encodeURIComponent</span> troca caracteres perigosos da URL por códigos <code>%XX</code>.</li>
+<li><span class="highlight">resposta.ok</span> é <code>false</code> no 404. <span class="highlight">resposta.json()</span> converte o JSON em objetos JavaScript.</li>
+<li>Um <code>&lt;p&gt;</code> ignora o <code>\n</code>, por isso o CSS <code>#resultado { white-space: pre-line; }</code>.</li>
+</ul>
+</div>
+</section>
+
+<!-- 10. TODO O CAMINHO -->
+<section class="slide slide-alt">
+<div class="content-area">
+<h2 class="slide-title">10. O Caminho <span>Completo de um Pedido</span></h2>
+<p>Você digita <code>CIA</code> e clica em Buscar. A explicação simples é "o pedido vai e a resposta volta". Mas na prática, de fato, acontece isto (<strong>ida</strong>, depois <strong>volta</strong>):</p>
+<div class="exercise-box"><p><strong>Ida</strong></p>
+<ul style="margin-bottom:0;">
+<li><strong>1. Navegador:</strong> o evento <code>submit</code> dispara <code>buscar</code>. O <code>fetch</code> monta o pedido <code>GET /espioes?agencia=CIA</code>.</li>
+<li><strong>2. Rede local (loopback):</strong> <code>localhost</code> é o nome do endereço <code>127.0.0.1</code>, "este próprio computador". Navegador, Java e MySQL são <strong>programas (processos) separados</strong>, cada um com sua memória privada. Eles <em>não</em> compartilham memória: conversam por <strong>sockets</strong> (portas) do sistema operacional, que copia os bytes de um para o outro. O protocolo <strong>TCP</strong> garante que cheguem inteiros e em ordem.</li>
+<li><strong>3. Porta 8080 / Tomcat:</strong> quem escuta a porta 8080 é o Tomcat, o servidor embutido (software oculto nº 1). Ele lê o texto HTTP (<code>GET /espioes?agencia=CIA</code> + cabeçalhos, incluindo <code>Origin</code>).</li>
+<li><strong>4. DispatcherServlet:</strong> o "recepcionista" do Spring (software oculto nº 2) vê a rota <code>/espioes</code> e escolhe o método com <code>@GetMapping("/espioes")</code>. Extrai <code>CIA</code> (<code>@RequestParam</code>).</li>
+<li><strong>5. Controller:</strong> executa <code>findByNomeAgencia("CIA")</code>. Na verdade o repository é um objeto <em>proxy</em> (um "dublê") criado pelo Spring.</li>
+<li><strong>6. Hibernate (ORM):</strong> traduz a chamada em SQL: <code>select ... from Agencia where nome_agencia=?</code>.</li>
+<li><strong>7. HikariCP + JDBC:</strong> abrir conexão é lento, então o Spring mantém um <em>pool</em> de conexões abertas (HikariCP). Pega uma emprestada. O <strong>MySQL Driver</strong> traduz o pedido para o protocolo do MySQL.</li>
+<li><strong>8. Rede de novo:</strong> socket TCP na porta <strong>3306</strong> até o processo <code>mysqld</code>.</li>
+<li><strong>9. MySQL:</strong> confere usuário e senha, analisa o SQL, usa os índices e lê os dados do disco (ou do cache em memória), achando a linha da CIA (id 1).</li>
+</ul></div>
+<div class="exercise-box"><p><strong>Volta</strong></p>
+<ul style="margin-bottom:0;">
+<li><strong>10.</strong> O MySQL devolve as linhas pelo socket. O driver monta um <code>ResultSet</code>, e o Hibernate o transforma em objeto <code>Agencia</code>. A conexão volta ao pool.</li>
+<li><strong>11.</strong> O controller usa <code>ag.getId()</code> e repete os passos 5 a 10 com <code>select ... from Espiao where id_agencia=?</code>. Voltam objetos <code>Espiao</code> numa <code>List</code>.</li>
+<li><strong>12. Jackson:</strong> converte a lista em texto <strong>JSON</strong> usando os getters (<code>[{"nomeEspiao":"Falcon",...}]</code>). É a <em>serialização</em>.</li>
+<li><strong>13.</strong> O Spring monta a resposta HTTP: status <code>200 OK</code>, cabeçalhos (incluindo <code>Access-Control-Allow-Origin</code>, por causa do <code>@CrossOrigin</code>) e o JSON no corpo. O Tomcat envia pelo socket.</li>
+<li><strong>14. Navegador:</strong> confere o CORS. Se estiver autorizado, a promessa do <code>fetch</code> é resolvida, o <code>await</code> continua, <code>resposta.json()</code> reconstrói os objetos JS, o <code>for</code> monta o texto e o <code>textContent</code> o mostra no <code>&lt;p&gt;</code>.</li>
+</ul></div>
+<div class="obs-box"><p style="margin-bottom:0;"><strong>Para o 404:</strong> no passo 5, <code>findByNomeAgencia</code> devolve <code>null</code>, o controller responde <code>notFound()</code>, o <code>resposta.ok</code> dá <code>false</code> e o JS escreve "Agência não encontrada." Só uma consulta SQL foi feita.</p></div>
+</div>
+</section>
+
+<!-- EXERCÍCIOS -->
+<section class="slide">
+<div class="content-area">
+<h2 class="slide-title">Mão na <span>Massa (Fixação)</span></h2>
+<p>Responda por escrito, com suas palavras. Quem quiser, pode complementar com o termo técnico.</p>
+
+<div class="exercise-box"><p><strong>1. Banco (etapa 1):</strong> o que é um dump SQL? Qual a diferença entre PRIMARY KEY e FOREIGN KEY? Por que o espião guarda o número da agência e não o nome?</p></div>
+<div class="exercise-box"><p><strong>2. Spring Initializr (etapa 2):</strong> o que é um framework? Para que serve cada dependência escolhida (Web, Data JPA, MySQL Driver) e o que é o <code>pom.xml</code>? Que pacote resulta de Group <code>com.example</code> + Artifact <code>agencia</code>?</p></div>
+<div class="exercise-box"><p><strong>3. application.properties (etapa 3):</strong> explique cada parte de <code>jdbc:mysql://localhost:3306/agencias_db</code>. Por que a senha não leva aspas? O que fazem <code>ddl-auto=none</code> e <code>show-sql=true</code>?</p></div>
+<div class="exercise-box"><p><strong>4. AgenciaApplication (etapa 4):</strong> o que faz o método <code>main</code> e o que o Spring faz ao executar <code>SpringApplication.run</code>? Por que <code>controller</code>, <code>model</code> e <code>repository</code> precisam ficar dentro de <code>com.example.agencia</code>?</p></div>
+<div class="exercise-box"><p><strong>5. Arquitetura:</strong> Qual a responsabilidade de cada um dos arquivos <code>\Controller</code>, <code>\Repository</code>, <code>\Model</code> ?</p></div>
+<div class="exercise-box"><p><strong>6. Model:</strong> o que fazem <code>@Entity</code>, <code>@Table</code>, <code>@Id</code>, <code>@GeneratedValue</code> e <code>@Column</code> na classe <code>Espiao</code>? Por que o campo Java é <code>nomeReal</code> e a coluna é <code>nome_real</code>? Para que servem os getters?</p></div>
+<div class="exercise-box"><p><strong>7. Repository:</strong> o que significa <code>JpaRepository&lt;Agencia, Integer&gt;</code>? Cite 3 métodos que vêm de graça e o SQL de cada um. Por que o repository é uma interface? Por que <code>findByNomeAgencia</code> devolve um objeto e <code>findByIdAgencia</code> uma lista?</p></div>
+<div class="exercise-box"><p><strong>8. SQL implícito:</strong> escreva o SQL gerado por <code>findByNomeAgencia("CIA")</code> e por <code>findByIdAgencia(1)</code>. O que acontece se o método for <code>findByNome_agencia</code> (nome da coluna)? Onde você vê o SQL real sendo executado?</p></div>
+<div class="exercise-box"><p><strong>9. Controller:</strong> o que fazem <code>@RestController</code>, <code>@CrossOrigin</code>, <code>@GetMapping</code> e <code>@RequestParam</code>? O que é injeção de dependência e por que não damos <code>new</code>? Qual a diferença entre <code>ok(lista)</code> e <code>notFound().build()</code>?</p></div>
+<div class="exercise-box"><p><strong>10. JOIN:</strong> o que seria <code>@ManyToOne</code> e qual SQL com JOIN resultaria? Por que nossa solução faz duas consultas? Qual a vantagem do JOIN?</p></div>
+<div class="exercise-box"><p><strong>11. index.html:</strong> por que usamos <code>preventDefault()</code>? Para que servem <code>async</code>/<code>await</code>, <code>fetch</code> e <code>resposta.ok</code>? Por que <code>buscar</code> é passada sem parênteses ao <code>addEventListener</code>?</p></div>
+<div class="exercise-box"><p><strong>12. CORS:</strong> o que é CORS e por que o navegador bloquearia nosso pedido sem <code>@CrossOrigin</code>? Qual cabeçalho da resposta resolve isso?</p></div>
+<div class="exercise-box"><p><strong>13. O caminho completo (ida):</strong> descreva, passo a passo, o que ocorre da digitação de <code>CIA</code> até o MySQL receber o SQL. Cite os softwares ocultos (Tomcat, DispatcherServlet, proxy, Hibernate, HikariCP, driver JDBC), as portas e o que são sockets. Os programas compartilham memória? Explique.</p></div>
+<div class="exercise-box"><p><strong>14. O caminho completo (volta):</strong> descreva como as linhas do MySQL viram texto na tela. Passe por <code>ResultSet</code>, objetos Java, Jackson (JSON), resposta HTTP (status e cabeçalhos), <code>resposta.json()</code> e <code>textContent</code>.</p></div>
+<div class="exercise-box"><p><strong>15. Desafio:</strong> digite (no index.html) <code>XYZ</code>. Quantas consultas SQL rodam? Qual o status HTTP? O que o JavaScript mostra? E se a agência existir mas não tiver espiões?</p></div>
+</div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const slides = document.querySelectorAll('.slide');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+  }, { threshold: 0.15 });
+  slides.forEach(slide => observer.observe(slide));
+});
+</script>
+</body>
+</html>
