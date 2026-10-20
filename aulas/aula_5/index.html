@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 4: Relacionamentos e Consultas Personalizadas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* VARIÁVEIS GLOBAIS SEMÂNTICAS */
+        :root {
+            --bg-main: #00204E;
+            --bg-alt: #003060;
+            --bg-dark: #1a1a1a;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-light: #f5f5f5;
+            --text-muted: #daffde;
+            --text-highlight: #deff9a;
+            --accent-blue: #00A8E8;
+            --border-card: 6px solid #00A8E8;
+            --border-code: 1px solid #00A8E8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; background-color: var(--bg-main); }
+
+        body { color: var(--text-light); font-family: 'Urbanist', sans-serif; overflow-x: hidden; }
+
+        a { text-decoration: none; transition: transform 1.0s ease; display: inline-block; color: var(--accent-blue); }
+        a:hover { transform: scale(1.05); }
+
+        /* ESTRUTURA DOS SLIDES EM SCROLL */
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .slide.visible { opacity: 1; transform: translateY(0); }
+        .slide-alt { background-color: var(--bg-alt); }
+
+        /* TITULOS */
+        .slide-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .slide-title span { color: var(--text-light); }
+
+        /* LAYOUTS */
+        .content-area { width: 100%; max-width: 1200px; margin: 0 auto; }
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+
+        /* ELEMENTOS DE TEXTO */
+        p, li { font-size: 22px; line-height: 1.6; color: var(--text-muted); margin-bottom: 20px; }
+        strong { color: var(--accent-blue); }
+        .highlight { color: var(--text-highlight); font-weight: 700; }
+        h3 { font-size: 30px; margin-bottom: 20px; color: var(--text-light); }
+
+        /* LISTAS */
+        ul { list-style: none; margin-bottom: 20px; }
+        ul li::before { content: "•"; color: var(--accent-blue); font-weight: bold; display: inline-block; width: 1em; margin-left: -1em; }
+
+        /* BLOCOS DE CÓDIGO */
+        code { background: var(--bg-dark); padding: 4px 8px; border-radius: 4px; color: var(--text-highlight); font-family: 'Courier New', Courier, monospace; }
+        pre {
+            background: var(--bg-dark);
+            padding: 25px;
+            border-radius: 12px;
+            border: var(--border-code);
+            overflow-x: auto;
+            font-size: 18px;
+            color: var(--text-light);
+            font-family: 'Courier New', Courier, monospace;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* CAIXAS DE EXERCÍCIO E OBSERVAÇÕES */
+        .exercise-box { background: var(--bg-card); border-left: var(--border-card); padding: 25px; margin-top: 25px; border-radius: 0 12px 12px 0; }
+        .obs-box { background: rgba(222, 255, 154, 0.05); border-left: 6px solid var(--text-highlight); padding: 25px; margin-top: 35px; border-radius: 0 12px 12px 0; }
+
+        .bg-shape {
+            position: absolute; top: 10%; right: 5%; width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(0,168,232,0.1) 0%, transparent 70%);
+            z-index: 0; pointer-events: none;
+        }
+        .scroll-indicator {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            font-size: 18px; color: var(--text-highlight); animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+            40% { transform: translate(-50%, -10px); }
+            60% { transform: translate(-50%, -5px); }
+        }
+
+        @media (max-width: 900px) {
+            .slide { padding: 40px 25px; }
+            .slide-title { font-size: 34px; }
+            .two-column { grid-template-columns: 1fr; gap: 25px; }
+            p, li { font-size: 19px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .slide { transition: none; }
+            .scroll-indicator { animation: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CAPA -->
+    <section class="slide title-slide visible">
+        <div class="bg-shape"></div>
+        <div class="content-area" style="text-align: center;">
+            <h1 class="slide-title" style="font-size: 70px;">Relacionamentos: <span>Ligando Tabelas e Fazendo Consultas Próprias</span></h1>
+            <p>Da entidade isolada para a Agência de Espiões com JOIN.</p>
+        </div>
+        <div class="scroll-indicator">Role para baixo para começar <i class="fa-solid fa-chevron-down"></i></div>
+    </section>
+
+    <!-- 1. @MANYTOONE E @JOINCOLUMN -->
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">1. Relacionando Entidades: <span>@ManyToOne</span></h2>
+            <p>Na aula de comunicação total (aula passada) cada entidade vivia sozinha. No banco, porém, as tabelas se ligam por <strong>chaves estrangeiras</strong>: todo espião pertence a uma agência. No Java, em vez de guardar só o número da chave, guardamos o <strong>objeto inteiro</strong>.</p>
+
+            <div class="two-column">
+                <div>
+                    <ul>
+                        <li><span class="highlight">@ManyToOne</span>: "muitos espiões para uma agência". Descreve a relação.</li>
+                        <li><span class="highlight">@JoinColumn(name = "id_agencia")</span>: qual coluna <strong>da tabela Espiao</strong> guarda a chave estrangeira. O nome é o da coluna no MySQL, não o do atributo Java.</li>
+                        <li><code>nullable = false</code> espelha o <code>NOT NULL</code> do schema. A missão aceita NULL, então fica sem isso.</li>
+                    </ul>
+                </div>
+                <div>
+<pre>
+@Entity
+public class Espiao {
+    // id, nomeReal, nomeEspiao...
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_agencia", nullable = false)
+    private Agencia agencia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_missao")
+    private Missao missao;
+}</pre>
+                </div>
+            </div>
+
+            <div class="obs-box" style="margin-top: 15px;">
+                <p style="margin-bottom: 0;"><strong>Sem import:</strong> <code>Agencia</code> e <code>Missao</code> estão no mesmo pacote (<code>model</code>), então o Java as enxerga sem <code>import</code>. As anotações vêm do <code>jakarta.persistence.*</code>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. LAZY X EAGER -->
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">2. Quando Buscar? <span>LAZY x EAGER</span></h2>
+            <p>O atributo <code>fetch</code> controla <strong>quando</strong> o Hibernate carrega o objeto relacionado.</p>
+            <p> </p>
+
+            <div class="two-column">
+                <div>
+                    <p><span class="highlight">LAZY</span> (preguiçoso): ao carregar o espião, a agência <strong>não</strong> vem junto. O Hibernate coloca um substituto (proxy) e só vai ao banco quando você usa, por exemplo em <code>getAgencia().getNomeAgencia()</code>.</p>
+                    <p><span class="highlight">EAGER</span> (ansioso): traz o objeto relacionado junto, sempre. É o padrão do <code>@ManyToOne</code>.</p>
+                </div>
+                <div>
+                    <div class="exercise-box" style="margin-top: 0;">
+                        <p style="margin-bottom: 0;"><strong>O risco: problema N+1.</strong> Para listar 3 espiões e a agência de cada um, o Hibernate pode fazer 1 consulta pela lista e mais 1 para cada agência. Com 1000 espiões, são 1001 idas ao banco.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="obs-box" style="margin-top: 15px;">
+                <p style="margin-bottom: 0;"><strong>Dica:</strong> ligue <code>spring.jpa.show-sql=true</code> no <code>application.properties</code> e conte os <code>select</code> no console. Ver as consultas aparecendo ensina mais do que qualquer explicação.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. JPQL E JOIN FETCH -->
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">3. Consulta Própria: <span>@Query, JPQL e JOIN FETCH</span></h2>
+            <p>Antes, o controller buscava a agência e depois os espiões: <strong>duas idas ao banco</strong>. Agora o repository faz tudo em uma só, escrevendo a consulta com <span class="highlight">@Query</span>.</p>
+
+<pre>
+@Query("SELECT e FROM Espiao e JOIN FETCH e.agencia a WHERE a.nomeAgencia = :nomeAgencia")
+List&lt;Espiao&gt; buscarPorNomeAgencia(@Param("nomeAgencia") String nomeAgencia);</pre>
+
+            <ul>
+                <li><span class="highlight">JPQL</span> parece SQL, mas usa <strong>classes e atributos Java</strong>: <code>Espiao</code>, <code>e.agencia</code>, <code>a.nomeAgencia</code>. Não existem tabelas nem colunas aqui, por isso <code>SELECT e</code> devolve objetos <code>Espiao</code> inteiros.</li>
+                <li><span class="highlight">JOIN FETCH</span>: faz o JOIN <strong>e</strong> já preenche o campo <code>agencia</code> de cada espião, na mesma consulta. Um <code>JOIN</code> simples só filtra, e a agência seria buscada depois.</li>
+                <li><span class="highlight">:nomeAgencia</span> é um parâmetro nomeado, e o <span class="highlight">@Param</span> liga esse nome ao argumento do método. O valor viaja separado do texto, o que evita SQL Injection.</li>
+            </ul>
+
+            <div class="obs-box" style="margin-top: 15px;">
+                <p style="margin-bottom: 0;"><strong>Nome do método:</strong> com <code>@Query</code>, o Spring executa o texto e ignora o nome. Sem <code>@Query</code>, ele <em>lê o nome</em> (<code>findByNomeAgencia</code> vira SQL sozinho). O <code>JOIN FETCH</code> só trouxe a agência: a missão (LAZY) ainda gera selects extras no console, e dá para resolver com <code>LEFT JOIN FETCH e.missao</code>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. CONSULTA NATIVA -->
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">4. SQL de Verdade: <span>nativeQuery e LEFT JOIN</span></h2>
+            <p>Para exibir só <code>nome_espiao | agencia | missao</code> não precisamos de objetos, só de <strong>três colunas</strong>. Aqui escrevemos SQL puro e recebemos o resultado em uma interface com getters (uma "projeção").</p>
+
+            <div class="two-column">
+                <div>
+<pre>
+public interface EspiaoResumo {
+    String getNomeEspiao();
+    String getAgencia();
+    String getMissao();
+}</pre>
+<pre>
+@Query(nativeQuery = true, value =
+  "SELECT e.nome_espiao AS nomeEspiao, " +
+  "       a.nome_agencia AS agencia, " +
+  "       m.nome_missao AS missao " +
+  "FROM Espiao e " +
+  "JOIN Agencia a ON a.id_agencia = e.id_agencia " +
+  "LEFT JOIN Missao m ON m.id_missao = e.id_missao " +
+  "WHERE e.id_espiao = :idEspiao")
+EspiaoResumo buscarResumoPorId(@Param("idEspiao") Integer idEspiao);</pre>
+                </div>
+                <div>
+                    <ul>
+                        <li><span class="highlight">nativeQuery = true</span>: o texto é SQL do MySQL, com nomes de tabelas e colunas.</li>
+                        <li><span class="highlight">AS nomeEspiao</span>: o apelido precisa casar com o getter (<code>getNomeEspiao</code>). Assim o Spring sabe qual coluna vai em qual getter.</li>
+                        <li><span class="highlight">JOIN</span> descarta linhas sem par. <span class="highlight">LEFT JOIN</span> mantém todos os espiões, e a missão vem <code>NULL</code> quando não existe.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="obs-box" style="margin-top: 15px;">
+                <p style="margin-bottom: 0;"><strong>JPQL ou nativa?</strong> JPQL quando você quer <strong>objetos</strong> (<code>Espiao</code> com <code>agencia</code> preenchida). SQL nativo quando você quer <strong>colunas</strong> prontas para exibir.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. CONTROLLER, NULL E CORS -->
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">5. No Controller: <span>NULL, 404 e CORS</span></h2>
+
+            <div class="two-column">
+                <div>
+<pre>
+@GetMapping("/espioes/resumo")
+public ResponseEntity&lt;String&gt; buscarResumo(@RequestParam Integer id) {
+    EspiaoResumo r = espiaoRepository.buscarResumoPorId(id);
+
+    if (r == null) {
+        return ResponseEntity.notFound().build();
+    }
+
+    String missao = r.getMissao() == null ? "não há missão" : r.getMissao();
+    return ResponseEntity.ok(r.getNomeEspiao() + " |
+     " + r.getAgencia() + " | " + missao);
+}</pre>
+                </div>
+                <div>
+                    <ul>
+                        <li><span class="highlight">@RequestParam</span>: lê o valor da query string, ex.: <code>/espioes/resumo?id=1</code>. Na aula de comunicação total, o <code>@PathVariable</code> lia da própria URL (<code>/jogos/3</code>).</li>
+                        <li><span class="highlight">null</span>: o NULL do banco chega ao Java como <code>null</code>, e o ternário <code>? :</code> troca por um texto. Poderia ser feito no front, ou no banco com <code>COALESCE</code>.</li>
+                        <li><span class="highlight">404</span>: id inexistente devolve <code>notFound()</code>, e o front trata <code>!resposta.ok</code>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="obs-box">
+                <h3>CORS: o erro que aparece no front</h3>
+                <p style="margin-bottom: 0;">O navegador bloqueia um site que chama outro endereço (outra origem), a menos que o back-end autorize com <span class="highlight">@CrossOrigin</span> na classe do controller. Ao abrir o HTML direto do disco (<code>file:///</code>), a origem é <code>null</code> e o bloqueio também vale. Quando o <code>@CrossOrigin</code> some, o back-end responde 200 e mesmo assim o console mostra erro de CORS.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXERCÍCIOS DE FIXAÇÃO -->
+    <section class="slide">
+        <div class="content-area">
+            <h2 class="slide-title">Mão na <span>Massa (Fixação)</span></h2>
+            <p>Hora de testar o conhecimento da aula! Resolva os exercícios abaixo.</p>
+
+            <div class="exercise-box">
+                <p><strong>Nível 1: A Chave Estrangeira em Java</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Qual anotação declara, na classe <code>Espiao</code>, que "muitos espiões pertencem a uma agência"? E qual anotação informa o nome da coluna do MySQL que guarda essa chave estrangeira?</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Nível 2: Quem é Preguiçoso?</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Qual valor de <code>fetch</code> faz o Hibernate só buscar o objeto relacionado quando ele for realmente usado?<br><br>
+                ( ) <code>FetchType.EAGER</code><br>
+                ( ) <code>FetchType.LAZY</code><br>
+                ( ) <code>FetchType.NOW</code></p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Nível 3: Classe ou Tabela?</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Na consulta <code>SELECT e FROM Espiao e JOIN FETCH e.agencia a ...</code>, <code>Espiao</code> e <code>e.agencia</code> se referem a tabelas e colunas do MySQL ou a classes e atributos Java? Em qual linguagem essa consulta está escrita?</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>Nível 4: O Espião Sem Missão</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Na consulta de resumo, usamos <code>LEFT JOIN Missao</code>. O que aconteceria com um espião sem missão (<code>id_missao</code> NULL) se tivéssemos usado só <code>JOIN</code>?<br><br>
+                ( ) Ele apareceria com missão "null"<br>
+                ( ) Ele sumiria do resultado<br>
+                ( ) O Spring daria erro ao iniciar</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXERCÍCIOS DESCRITIVOS -->
+    <section class="slide slide-alt">
+        <div class="content-area">
+            <h2 class="slide-title">Para Pensar <span>(Exercícios Descritivos)</span></h2>
+            <p>Estes exercícios usam o que vimos na aula de comunicação total e na Aula 4. Responda com suas palavras, em 4 ou 5 linhas cada. Tempo estimado: cerca de 30 minutos.</p>
+
+            <div class="exercise-box">
+                <p><strong>1. Uma ida ao banco ou várias?</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Explique a diferença entre <code>JOIN</code> e <code>JOIN FETCH</code> em uma consulta JPQL. Em que situação o problema N+1 aparece e como o <code>JOIN FETCH</code> ajuda a evitá-lo?</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>2. NULL não é bug</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Um espião sem missão tem <code>id_missao</code> NULL. Explique por que a consulta precisa de <code>LEFT JOIN</code> e cite duas formas diferentes de mostrar "não há missão" ao usuário. Qual você escolheria e por quê?</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>3. Jogos e Categorias</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Na aula de comunicação total criamos a entidade <code>Jogo</code>. Imagine uma nova entidade <code>Categoria</code> (Ação, Aventura...), em que muitos jogos pertencem a uma categoria. Descreva o que você acrescentaria na classe <code>Jogo</code> (atributo e anotações) e explique para que serve cada anotação.</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>4. Três jeitos de enviar um dado</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">Compare <code>@RequestBody</code>, <code>@PathVariable</code> e <code>@RequestParam</code>. Para cada um, escreva um exemplo de requisição em que seria a escolha certa (por exemplo, cadastrar um jogo, deletar o jogo 5 e buscar jogos por categoria).</p>
+            </div>
+
+            <div class="exercise-box">
+                <p><strong>5. O erro de CORS enganoso</strong></p>
+                <p style="font-size: 18px; margin-bottom: 0;">O console do navegador mostra um erro de CORS, mas o endereço aberto direto na barra do navegador funciona e devolve o JSON. O que é CORS, por que o teste da barra de endereço não prova que o CORS está certo e qual alteração no controller resolve o problema?</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        /* ---------- REVELAÇÃO DOS SLIDES EM SCROLL ---------- */
+        document.addEventListener("DOMContentLoaded", function () {
+            const slides = document.querySelectorAll('.slide');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.15 }); // Revela o slide quando 15% dele está visível
+
+            slides.forEach(slide => observer.observe(slide));
+        });
+    </script>
+</body>
+</html>
