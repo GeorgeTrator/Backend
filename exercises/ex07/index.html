@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercício 07 — Editando o projeto</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f4f6;
+            color: #222;
+            line-height: 1.7;
+        }
+
+        main {
+            width: min(95%, 1100px);
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.10);
+        }
+
+        a {
+            text-decoration: none;
+            color: #444;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        h2 {
+            margin-top: 35px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        ul {
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        pre {
+            background: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: "Courier New", monospace;
+        }
+
+        /* Bloco de download */
+        .download-box {
+            margin: 30px 0;
+            padding: 22px 24px;
+            border: 2px dashed #999;
+            border-radius: 10px;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .download-box div h3 {
+            margin: 0 0 6px;
+        }
+
+        .download-box div p {
+            margin: 0;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: #2f6fed;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .download-btn:hover {
+            background: #234fb0;
+            text-decoration: none;
+        }
+
+        /* Passos */
+        .passo {
+            margin-top: 30px;
+            padding: 20px 22px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+
+        .passo h3 {
+            margin-top: 0;
+        }
+
+        .passo ul {
+            margin-bottom: 0;
+            color: #444;
+        }
+
+        .passo li {
+            margin-bottom: 6px;
+        }
+
+        /* Caixa de comentário explicando termos Java */
+        .explica {
+            margin-top: 14px;
+            padding: 12px 16px;
+            background: #eef4ff;
+            border-left: 4px solid #2f6fed;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .explica strong {
+            color: #1a3f8f;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main>
+
+        <a href="../../index.html">← Voltar para a Lista de Exercícios</a>
+
+        <h1>Exercício 07 — <strong>Faça você mesmo:</strong> Mini aplicação Full Stack</h1>
+        <p>A lista de exercícios está logo abaixo</p>
+
+        <p>
+            A aplicação full stack da última aula já está pronta! Agora você deve realizar algumas edições nela, seguindo os exercícios abaixo.
+        </p>
+
+        <h2>Baixe o projeto</h2>
+        <div class="download-box">
+            <div>
+                <h3>📦 agencia.zip</h3>
+                <p>Já vem com as pastas organizadas e arquivos necessários.</p>
+
+            </div>
+            <a class="download-btn" href="agencia.zip" download>Baixar projeto (.zip)</a>
+        </div>
+        <h2>Exercícios Práticos</h2>
+        <p>Realize os exercícios abaixo em ordem crescente de dificuldade:</p>
+
+        <div class="passo">
+            <h3>1. Acrescentar o nome real ao resumo</h3>
+            <p>A consulta de resumo passa a mostrar <code>nome_espiao | nome_real | agencia | missao</code>.</p>
+            <ul>
+                <li>O aluno acrescenta <code>e.nome_real AS nomeReal</code> na consulta nativa, <code>String getNomeReal();</code> na interface <code>EspiaoResumo</code> e ajusta a <code>String</code> montada no controller.</li>
+                <li>Só mexe em arquivos que já existem, e o padrão é o da coluna <code>nomeEspiao</code>.</li>
+            </ul>
+        </div>
+
+        <div class="passo">
+            <h3>2. Tratar o NULL do codinome</h3>
+            <p>No schema, <code>nome_espiao</code> aceita <code>NULL</code>, assim como <code>id_missao</code>. Alguns espiões podem não ter codinome, e o resumo deve mostrar <code>"sem codinome"</code>.</p>
+            <ul>
+                <li>Copie a lógica da missão: o operador ternário <code>== null ? "..." : ...</code> no controller (ou o tratamento direto no front-end com <code>if</code>).</li>
+                <li>Para testar, faça um <code>INSERT</code> de um espião com <code>nome_espiao</code> nulo no banco de dados.</li>
+            </ul>
+        </div>
+
+        <div class="passo">
+            <h3>3. Nova busca: espiões de uma missão</h3>
+            <p>Crie um endpoint <code>/espioes/missao?nome=Operação Sombra</code> que devolve os espiões daquela missão.</p>
+            <ul>
+                <li>O modelo de referência é a busca por agência: utilize <code>@Query</code> em JPQL com <code>JOIN FETCH e.missao m WHERE m.nomeMissao = :nomeMissao</code>, <code>@Param</code>, <code>@RequestParam</code> e <code>@GetMapping</code>.</li>
+                <li>Pode ser testado diretamente na barra do navegador.</li>
+            </ul>
+        </div>
+
+        <div class="passo">
+            <h3>4. Criar uma classe nova: listar as missões</h3>
+            <p>Atualmente existe apenas <code>Missao.java</code>. Crie o <code>MissaoRepository</code> (herdando <code>JpaRepository&lt;Missao, Integer&gt;</code>) e um <code>MissaoController</code>.</p>
+            <ul>
+                <li>Configure o controller com <code>@RestController</code>, <code>@CrossOrigin</code>, o repositório injetado e um <code>@GetMapping("/missoes")</code> que devolve <code>findAll()</code>.</li>
+                <li>O uso de <code>@CrossOrigin</code> é essencial para evitar bloqueios de CORS.</li>
+            </ul>
+        </div>
+
+        <div class="passo">
+            <h3>5. Front-end: mostrar a missão na busca por agência</h3>
+            <p>A resposta de <code>/espioes?agencia=CIA</code> já traz o objeto missão dentro de cada espião. O front-end passa a escrever <code>Falcon (John Carter): descrição | Operação Sombra</code>, ou "não há missão" quando for nulo.</p>
+            <ul>
+                <li>Utilize os recursos já presentes no <code>index.html</code>: <code>fetch</code>, <code>for...of</code>, template strings e <code>textContent</code>, combinados com um <code>if</code> para tratar valores nulos.</li>
+                <li>Como variação opcional, crie uma terceira caixa de busca que chame o endpoint do exercício 4 e liste as missões.</li>
+            </ul>
+        </div>
+
+        <p>
+        Extraia o <code>.zip</code> em uma pasta no seu computador (Área de Trabalho, por exemplo) e abra
+        essa pasta no VS Code (<strong>Arquivo → Abrir Pasta...</strong>).
+        </p>
+            <p>Lembre-se: de baixar as extensões no VsCode: Extension Java Pack (<abbr title="Extension Java Pack">EJP</abbr>), Database Client (<abbr title="Database Client">DC</abbr>).</p>
+            <p>Lembre-se: É preciso configurar o arquivo properties do Spring Boot para colocar a senha do banco de dados</p>
+            <p>Lembre-se: É preciso configurar o Database Client colocando a senha do banco de dados (também).</p>
+            <p>Se as extensões estiverem corretas, o <abbr title="Extension Java Pack">EJP</abbr> fará imports automáticos, ajudará com a sintaxe, etc. e o <abbr title="Database Client">DC</abbr> facilitará as consultas no MySQL, permitindo que sejam feitas direta pelo VS Code.</p>
+
+
+
+    </main>
+
+</body>
+</html>
