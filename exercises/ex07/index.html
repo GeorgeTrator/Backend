@@ -197,20 +197,21 @@
         </div>
 
         <div class="passo">
-            <h3>4. Criar uma classe nova: listar as missões</h3>
-            <p>Atualmente existe apenas <code>Missao.java</code>. Crie o <code>MissaoRepository</code> (herdando <code>JpaRepository&lt;Missao, Integer&gt;</code>) e um <code>MissaoController</code>.</p>
+            <h3>4. Novo formulário</h3>
+            <p>Crie um novo formulário para listar as missões, que criamos no exercício 3.</p>
             <ul>
-                <li>Configure o controller com <code>@RestController</code>, <code>@CrossOrigin</code>, o repositório injetado e um <code>@GetMapping("/missoes")</code> que devolve <code>findAll()</code>.</li>
-                <li>O uso de <code>@CrossOrigin</code> é essencial para evitar bloqueios de CORS.</li>
+                <li>Veja as funções async que já estão no front end para buscar e exibir as missões.</li>
             </ul>
         </div>
 
         <div class="passo">
-            <h3>5. Front-end: mostrar a missão na busca por agência</h3>
-            <p>A resposta de <code>/espioes?agencia=CIA</code> já traz o objeto missão dentro de cada espião. O front-end passa a escrever <code>Falcon (John Carter): descrição | Operação Sombra</code>, ou "não há missão" quando for nulo.</p>
+            <h3>5. Front-end de qualidade!</h3>
+            <p>Neste momento, o front-end... não existe! Vamos melhorar isso </p>
             <ul>
-                <li>Utilize os recursos já presentes no <code>index.html</code>: <code>fetch</code>, <code>for...of</code>, template strings e <code>textContent</code>, combinados com um <code>if</code> para tratar valores nulos.</li>
-                <li>Como variação opcional, crie uma terceira caixa de busca que chame o endpoint do exercício 4 e liste as missões.</li>
+                <li>Centralize os formulários em um div </li>
+                <li>Aplicar uma cor de fundo, sombreamento e bordas</li>
+                <li>Utilize CSS para melhorar a aparência e a usabilidade</li>
+                <li>Applicar efeitos de hover</li>
             </ul>
         </div>
 
