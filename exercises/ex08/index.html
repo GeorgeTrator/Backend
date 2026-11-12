@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado — Catálogo de Filmes (CRUD completo)</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f4f6;
+            color: #222;
+            line-height: 1.7;
+        }
+
+        main {
+            width: min(95%, 1100px);
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.10);
+        }
+
+        a {
+            text-decoration: none;
+            color: #444;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        h2 {
+            margin-top: 35px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        ul, ol {
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        pre {
+            background: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: "Courier New", monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f7f7f7;
+        }
+
+        /* Bloco de download */
+        .download-box {
+            margin: 30px 0;
+            padding: 22px 24px;
+            border: 2px dashed #999;
+            border-radius: 10px;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .download-box div h3 {
+            margin: 0 0 6px;
+        }
+
+        .download-box div p {
+            margin: 0;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: #2f6fed;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .download-btn:hover {
+            background: #234fb0;
+            text-decoration: none;
+        }
+
+        /* Passos */
+        .passo {
+            margin-top: 30px;
+            padding: 20px 22px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .passo h3 {
+            margin-top: 0;
+        }
+
+        .passo ul {
+            margin-bottom: 0;
+            color: #444;
+        }
+
+        .passo li {
+            margin-bottom: 6px;
+        }
+
+        /* Caixa de explicação */
+        .explica {
+            margin-top: 14px;
+            padding: 12px 16px;
+            background: #eef4ff;
+            border-left: 4px solid #2f6fed;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .explica strong {
+            color: #1a3f8f;
+        }
+
+        .explica pre {
+            background: white;
+        }
+
+        /* Caixa "para pensar" */
+        .pensar {
+            margin-top: 14px;
+            padding: 12px 16px;
+            background: #fff7e6;
+            border-left: 4px solid #e0a100;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        /* Etiquetas dos verbos HTTP */
+        .verbo {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 9px;
+            border-radius: 20px;
+            vertical-align: middle;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .verbo.get    { background: #dff5e6; color: #1d6b38; }
+        .verbo.post   { background: #fff1cc; color: #8a6200; }
+        .verbo.put    { background: #dcecfb; color: #1a5a91; }
+        .verbo.delete { background: #fde0e0; color: #9b1c1c; }
+
+        #eer_img {
+            display: block;
+            margin: 20px auto 6px;
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+
+        .legenda {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main>
+
+        <a href="../../index.html">← Voltar para a Lista de Exercícios</a>
+
+        <h1>Simulado da Prova — <strong>CineSexta13</strong> 🔪 Catálogo de Filmes</h1>
+
+        <p>
+            Amanhã é sexta-feira 13! Para entrar no clima, o simulado é um catálogo de filmes com muito terror
+            (e alguns filmes de outros gêneros para quem não gosta de levar susto).
+        </p>
+        <p>
+            Até agora, nosso back-end só <strong>buscava</strong> dados (<span class="verbo get">GET</span>).
+            Neste simulado vamos completar o CRUD: <strong>cadastrar</strong> (<span class="verbo post">POST</span>),
+            <strong>alterar</strong> (<span class="verbo put">PUT</span>) e <strong>apagar</strong>
+            (<span class="verbo delete">DELETE</span>). O front-end já vem pronto e estilizado: você vai escrever
+            o back-end e as <code>async function</code> do JavaScript.
+        </p>
+
+        <h2>Baixe o projeto para treinar:</h2>
+        <div class="download-box">
+            <div>
+                <h3>📦 simulado.zip</h3>
+                <p>Já vem montado com as pastas <code>backend</code>, <code>frontend</code> e <code>database</code>, e com model, repository e controller iniciais.</p>
+            </div>
+            <a class="download-btn" href="simulado.zip" download>Baixar projeto (.zip)</a>
+        </div>
+        <p>Você pode conferir o gabarito aqui:</p>
+        <div class="download-box">
+            <div>
+                <h3>📦 simulado_gabarito.zip</h3>
+                <p>Tente fazer sozinho antes de abrir!</p>
+            </div>
+            <a class="download-btn" href="simulado_gabarito.zip" download>Baixar gabarito (.zip)</a>
+        </div>
+
+        <!-- ============================================================ -->
+        <h2>Como será na prova</h2>
+        <p>No simulado, a estrutura já vem pronta. Na prova, <strong>você monta</strong> ela sozinho:</p>
+        <ol>
+            <li>Crie uma pasta chamada <code>prova</code> e, dentro dela, as pastas <code>backend</code>, <code>frontend</code> e <code>database</code>.</li>
+            <li>Baixe o projeto gerado no Spring Initializr (<a href="demo.zip" download><code>demo.zip</code></a>) e extraia o <strong>conteúdo</strong> dele dentro de <code>backend</code>.</li>
+            <li>Coloque o <code>dump.sql</code> em <code>database</code> e o <code>index.html</code> em <code>frontend</code>.</li>
+            <li>Configure o <code>application.properties</code> (próxima seção).</li>
+            <li>Rode o <code>dump.sql</code> no Database Client, rode o Spring Boot e abra o <code>index.html</code> no navegador.</li>
+        </ol>
+<pre><code>prova
+├─ backend
+│  ├─ pom.xml
+│  ├─ mvnw / mvnw.cmd
+│  └─ src/main
+│     ├─ java/com/example/demo
+│     │  ├─ DemoApplication.java
+│     │  ├─ controller
+│     │  ├─ model
+│     │  └─ repository
+│     └─ resources/application.properties
+├─ database
+│  └─ dump.sql
+└─ frontend
+   └─ index.html</code></pre>
+
+        <!-- ============================================================ -->
+        <h2>Configurando o application.properties</h2>
+        <p>
+            Abra <code>backend/src/main/resources/application.properties</code> e deixe assim, trocando
+            <code>trocar_usuário</code> e <code>trocar_senha</code> pelo usuário e senha do seu MySQL:
+        </p>
+<pre><code>spring.application.name=demo
+spring.datasource.url=jdbc:mysql://localhost:3306/filmes_db
+spring.datasource.username=trocar_usuário
+spring.datasource.password=trocar_senha</code></pre>
+
+        <div class="explica">
+            <strong>3306 ou 8080?</strong> São duas portas diferentes, cuidado para não trocar:
+            <ul>
+                <li><code>3306</code> é a porta do <strong>MySQL</strong>. É ela que vai no <code>application.properties</code>, porque é onde o Spring busca os dados.</li>
+                <li><code>8080</code> é a porta do <strong>Tomcat</strong>, o servidor que roda dentro do Spring Boot. É ela que vai no <code>fetch</code> do front-end (<code>http://localhost:8080/...</code>), porque é onde o front busca o Spring.</li>
+            </ul>
+            <code>filmes_db</code> é o nome do banco criado pelo <code>dump.sql</code>.
+        </div>
+
+        <!-- ============================================================ -->
+        <h2>O banco de dados</h2>
+        <p>O catálogo tem 5 tabelas, todas ligadas entre si:</p>
+
+        <img src="eer_filmes.png" alt="Esquema EER do catálogo de filmes" id="eer_img">
+        <p class="legenda">Esquema EER (feito no TerraER)</p>
+
+        <table>
+            <tr>
+                <th>Tabela</th>
+                <th>O que guarda</th>
+                <th>Chave estrangeira</th>
+            </tr>
+            <tr>
+                <td><code>Genero</code></td>
+                <td>Terror, Suspense, Ficção Científica, Comédia, Animação</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td><code>Diretor</code></td>
+                <td>Nome e nacionalidade do diretor</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td><code>Filme</code></td>
+                <td>Título, ano, duração, classificação indicativa e sinopse</td>
+                <td><code>id_genero</code> e <code>id_diretor</code> (ambas <code>NOT NULL</code>)</td>
+            </tr>
+            <tr>
+                <td><code>Usuario</code></td>
+                <td>Nome e e-mail de quem usa o site</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td><code>Avaliacao</code></td>
+                <td>Nota (0 a 10) e comentário (pode ser <code>NULL</code>)</td>
+                <td><code>id_filme</code> e <code>id_usuario</code></td>
+            </tr>
+        </table>
+
+        <div class="explica">
+            <strong>Cadê as chaves estrangeiras no desenho?</strong> No EER elas não aparecem como atributo:
+            quem representa a ligação é o <strong>losango</strong>. O losango <em>pertence</em> (Filme N : 1 Gênero)
+            vira a coluna <code>id_genero</code> na tabela <code>Filme</code>, porque a chave estrangeira sempre fica do lado <strong>N</strong>.
+            No Java, ela vira o atributo <code>private Genero genero;</code> com <code>@ManyToOne</code>.
+        </div>
+
+        <p>
+            <strong>Dica:</strong> nos exercícios você vai apagar e alterar dados. Para voltar tudo ao normal,
+            é só rodar o <code>dump.sql</code> inteiro de novo (ele apaga e recria o <code>filmes_db</code>).
+        </p>
+
+        <!-- ============================================================ -->
+        <h2>Novidade: POST, PUT e DELETE</h2>
+        <p>Cada operação do CRUD tem o seu verbo HTTP e a sua anotação no Spring:</p>
+
+        <table>
+            <tr>
+                <th>Verbo</th>
+                <th>Para quê</th>
+                <th>Anotação</th>
+                <th>Método do repository</th>
+            </tr>
+            <tr>
+                <td><span class="verbo get">GET</span></td>
+                <td>Buscar (já sabemos)</td>
+                <td><code>@GetMapping</code></td>
+                <td><code>findAll()</code>, <code>findById()</code>, <code>@Query</code></td>
+            </tr>
+            <tr>
+                <td><span class="verbo post">POST</span></td>
+                <td>Cadastrar algo novo</td>
+                <td><code>@PostMapping</code></td>
+                <td><code>save(obj)</code> com obj <strong>sem</strong> id → <code>INSERT</code></td>
+            </tr>
+            <tr>
+                <td><span class="verbo put">PUT</span></td>
+                <td>Alterar algo que já existe</td>
+                <td><code>@PutMapping</code></td>
+                <td><code>save(obj)</code> com obj <strong>com</strong> id → <code>UPDATE</code></td>
+            </tr>
+            <tr>
+                <td><span class="verbo delete">DELETE</span></td>
+                <td>Apagar</td>
+                <td><code>@DeleteMapping</code></td>
+                <td><code>deleteById(id)</code></td>
+            </tr>
+        </table>
+
+        <div class="explica">
+            <strong>De onde vem o dado?</strong> O Spring pode ler a informação de três lugares:
+            <ul>
+                <li><code>@RequestParam</code>: da <em>query string</em>, depois do <code>?</code>. Ex.: <code>/filmes/genero?nome=Terror</code></li>
+                <li><code>@PathVariable</code>: de um pedaço da própria URL, marcado com <code>{ }</code>. Ex.: <code>@DeleteMapping("/avaliacoes/{id}")</code> e a URL <code>/avaliacoes/3</code></li>
+                <li><code>@RequestBody</code>: do <strong>corpo</strong> da requisição, em JSON. O Spring converte o JSON em um objeto Java (as chaves do JSON precisam ter o <strong>mesmo nome</strong> dos atributos da classe).</li>
+            </ul>
+        </div>
+
+        <div class="explica">
+            <strong>E no front-end?</strong> Até agora o <code>fetch</code> recebia só a URL (e isso é sempre um GET).
+            Para os outros verbos, passamos um segundo parâmetro com as opções:
+<pre><code>const resposta = await fetch(`http://localhost:8080/jogos`, {
+    method: 'POST',                                   // o verbo: 'POST', 'PUT' ou 'DELETE'
+    headers: { 'Content-Type': 'application/json' },  // avisa o Spring: "o corpo é JSON"
+    body: JSON.stringify(jogo)                        // objeto JavaScript → texto JSON
+});</code></pre>
+            O <code>DELETE</code> não precisa de <code>headers</code> nem <code>body</code>: só do <code>method</code>.
+        </div>
+
+        <div class="explica">
+            <strong>Atenção:</strong> a barra do navegador só faz <span class="verbo get">GET</span>. Então POST, PUT e DELETE
+            não dá para testar digitando a URL: teste pelo front-end (e confira o resultado com as consultas GET).
+        </div>
+
+        <div class="explica">
+            <strong>Respostas do back-end:</strong>
+            <code>ResponseEntity.ok("...")</code> = 200 (deu certo),
+            <code>ResponseEntity.notFound().build()</code> = 404 (não existe, sem mensagem) e
+            <code>ResponseEntity.badRequest().body("...")</code> = 400 (o pedido veio errado, com mensagem).
+            No front, <code>!resposta.ok</code> pega o 404 e o 400.
+        </div>
+
+        <!-- ============================================================ -->
+        <h2>Exercícios Práticos</h2>
+        <p>Realize os exercícios abaixo em ordem crescente de dificuldade. Cada um tem o seu card pronto no front-end; os comentários no <code>&lt;script&gt;</code> dizem os ids dos campos.</p>
+
+        <div class="passo">
+            <h3>1. Aquecimento: filmes de um diretor <span class="verbo get">GET</span></h3>
+            <p>Crie o endpoint <code>/filmes/diretor?nome=John Carpenter</code>, que devolve os filmes daquele diretor.</p>
+            <ul>
+                <li>O modelo é a busca por gênero. No <code>FilmeRepository</code>, crie <code>buscarPorDiretor</code> com <code>@Query</code> em JPQL: <code>JOIN FETCH f.genero JOIN FETCH f.diretor d WHERE d.nomeDiretor = :nomeDiretor</code> e <code>@Param</code>.</li>
+                <li>No <code>FilmeController</code>, use <code>@GetMapping</code> e <code>@RequestParam</code>.</li>
+                <li>Por que dois <code>JOIN FETCH</code>? O front mostra o gênero e o diretor de cada filme, então os dois precisam vir junto.</li>
+                <li>No front, crie a <code>async function buscarPorDiretor</code> (dá para reaproveitar a função <code>exibirFilmes</code>).</li>
+                <li>Pode ser testado direto na barra do navegador. John Carpenter tem 2 filmes no catálogo.</li>
+            </ul>
+        </div>
+
+        <div class="passo">
+            <h3>2. Apagar uma avaliação <span class="verbo delete">DELETE</span></h3>
+            <p>No <code>AvaliacaoController</code>, crie <code>DELETE /avaliacoes/{id}</code>, que apaga a avaliação com aquele id.</p>
+
+            <div class="explica">
+                <strong>Exemplo com o <code>Jogo</code> da aula 3:</strong>
+<pre><code>@DeleteMapping("/jogos/{id}")
+public ResponseEntity&lt;String&gt; apagar(@PathVariable Integer id) {
+    if (!jogoRepository.existsById(id)) {       // não existe? 404
+        return ResponseEntity.notFound().build();
+    }
+    jogoRepository.deleteById(id);
+    return ResponseEntity.ok("Jogo " + id + " apagado.");
+}</code></pre>
+                O <code>{id}</code> da URL e o parâmetro <code>Integer id</code> precisam ter o mesmo nome.
+            </div>
+
+            <ul>
+                <li>No front, use <code>fetch(..., { method: 'DELETE' })</code> e mostre o texto da resposta com <code>await resposta.text()</code>.</li>
+                <li>Para testar: veja as avaliações do filme 1, apague uma delas pelo id (o número depois do <code>#</code>) e veja de novo.</li>
+            </ul>
+
+            <div class="pensar">
+                <strong>Para pensar:</strong> no Database Client, tente <code>DELETE FROM Filme WHERE id_filme = 1;</code>.
+                O MySQL não deixa. Por quê? O que precisaria acontecer antes para conseguir apagar esse filme?
+            </div>
+        </div>
+
+        <div class="passo">
+            <h3>3. Cadastrar um diretor <span class="verbo post">POST</span></h3>
+            <p>No <code>DiretorController</code>, crie <code>POST /diretores</code> (cadastra) e <code>GET /diretores</code> (lista todos, para conferir).</p>
+
+            <div class="explica">
+                <strong>Exemplo com o <code>Jogo</code>:</strong>
+<pre><code>@PostMapping("/jogos")
+public ResponseEntity&lt;String&gt; cadastrar(@RequestBody Jogo jogo) {
+    Jogo salvo = jogoRepository.save(jogo);    // sem id → INSERT
+    return ResponseEntity.ok("Jogo cadastrado com id " + salvo.getId());
+}</code></pre>
+                O <code>@RequestBody</code> pega o JSON <code>{ "nome": "Minecraft", "preco": 99.9 }</code> e entrega um objeto <code>Jogo</code> pronto.
+                Depois do <code>save</code>, o objeto volta com o id que o MySQL gerou (<code>AUTO_INCREMENT</code>).
+            </div>
+
+            <ul>
+                <li>No front, monte o objeto com as chaves <strong>iguais aos atributos</strong> da classe <code>Diretor</code>: <code>{ nomeDiretor: ..., nacionalidade: ... }</code>, e envie com <code>method: 'POST'</code>, <code>headers</code> e <code>body: JSON.stringify(...)</code>.</li>
+                <li>O <code>GET /diretores</code> só precisa do <code>findAll()</code>, que já vem no <code>JpaRepository</code>. Teste na barra do navegador.</li>
+                <li>O botão "Listar diretores" não é um <code>submit</code>: use <code>addEventListener('click', ...)</code>.</li>
+            </ul>
+        </div>
+
+        <div class="passo">
+            <h3>4. Editar uma avaliação <span class="verbo put">PUT</span></h3>
+            <p>No <code>AvaliacaoController</code>, crie <code>PUT /avaliacoes/{id}</code>, que altera a nota e o comentário de uma avaliação.</p>
+
+            <div class="explica">
+                <strong>O PUT tem 3 passos: buscar, alterar e salvar.</strong> O id vem na URL (<code>@PathVariable</code>) e os novos dados vêm no corpo (<code>@RequestBody</code>):
+<pre><code>@PutMapping("/jogos/{id}")
+public ResponseEntity&lt;String&gt; atualizar(@PathVariable Integer id, @RequestBody Jogo dados) {
+    Jogo jogo = jogoRepository.findById(id).orElse(null);   // 1. buscar
+    if (jogo == null) {
+        return ResponseEntity.notFound().build();
+    }
+    jogo.setPreco(dados.getPreco());                        // 2. alterar
+    jogoRepository.save(jogo);                              // 3. salvar (tem id → UPDATE)
+    return ResponseEntity.ok("Jogo " + id + " atualizado.");
+}</code></pre>
+                O <code>findById</code> devolve um <code>Optional</code> (uma "caixa" que pode estar vazia). O <code>.orElse(null)</code> abre a caixa: se estiver vazia, devolve <code>null</code>.
+            </div>
+
+            <ul>
+                <li>A classe <code>Avaliacao</code> só tem getters. Para alterar, crie <code>setNota</code> e <code>setComentario</code>.</li>
+                <li>Se a nota não estiver entre 0 e 10, devolva <code>ResponseEntity.badRequest().body("A nota deve ser de 0 a 10.")</code>.</li>
+                <li>No front, use <code>method: 'PUT'</code>, o id na URL e <code>{ nota, comentario }</code> no <code>body</code>. Use <code>Number(...)</code> para transformar a nota em número.</li>
+                <li>O 404 vem sem texto, mas o 400 vem com a mensagem do back-end: mostre <code>await resposta.text()</code> quando ela não estiver vazia.</li>
+            </ul>
+        </div>
+
+        <div class="passo">
+            <h3>5. Avaliar um filme <span class="verbo post">POST</span> com chave estrangeira</h3>
+            <p>No <code>AvaliacaoController</code>, crie <code>POST /avaliacoes</code>, que cadastra uma avaliação nova ligada a um filme e a um usuário.</p>
+
+            <div class="explica">
+                <strong>Como mandar a chave estrangeira?</strong> Na classe <code>Avaliacao</code>, <code>filme</code> e <code>usuario</code> não são números: são <strong>objetos</strong> (lembra do <code>@ManyToOne</code>?). Então, no JSON, eles também viram objetos com o id dentro:
+<pre><code>{
+    "nota": 9,
+    "comentario": "Clássico!",
+    "filme":   { "id": 13 },
+    "usuario": { "id": 4 }
+}</code></pre>
+                O <code>@RequestBody Avaliacao avaliacao</code> monta tudo, e o <code>save</code> grava <code>id_filme = 13</code> e <code>id_usuario = 4</code> na tabela.
+            </div>
+
+            <ul>
+                <li>Antes de salvar, confira com <code>existsById</code> se o filme (<code>avaliacao.getFilme().getId()</code>) e o usuário existem. Se não existirem, devolva <code>badRequest</code> com uma mensagem.</li>
+                <li>Valide a nota (0 a 10) como no exercício 4.</li>
+                <li>Para testar: o filme 13 (<em>À Meia-Noite Levarei Sua Alma</em>) não tem nenhuma avaliação. Veja o resumo dele, avalie e veja o resumo de novo: "sem avaliações" vira a nota média.</li>
+            </ul>
+        </div>
+
+        <!-- ============================================================ -->
+        <h2>Lembretes</h2>
+        <p>
+            Extraia o <code>.zip</code> em uma pasta no seu computador (Área de Trabalho, por exemplo) e abra
+            essa pasta no VS Code (<strong>Arquivo → Abrir Pasta...</strong>).
+        </p>
+        <p>Lembre-se: de baixar as extensões no VS Code: Extension Java Pack (<abbr title="Extension Java Pack">EJP</abbr>), Database Client (<abbr title="Database Client">DC</abbr>).</p>
+        <p>Lembre-se: é preciso configurar o <code>application.properties</code> do Spring Boot com o usuário e a senha do banco de dados.</p>
+        <p>Lembre-se: é preciso configurar o Database Client com a senha do banco de dados (também).</p>
+        <p>Se as extensões estiverem corretas, o <abbr title="Extension Java Pack">EJP</abbr> fará imports automáticos (inclusive de <code>@PostMapping</code>, <code>@PathVariable</code> etc.), ajudará com a sintaxe, e o <abbr title="Database Client">DC</abbr> facilitará as consultas no MySQL, permitindo que sejam feitas direto pelo VS Code.</p>
+
+    </main>
+
+</body>
+</html>
